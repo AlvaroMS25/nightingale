@@ -1,4 +1,5 @@
 use std::num::NonZeroU64;
+use std::ops::Deref;
 use axum::body::Body;
 use axum::extract::{Query, State as AxumState};
 use axum::http::StatusCode;
@@ -8,6 +9,7 @@ use serde::Deserialize;
 use songbird::input::{Input, YoutubeDl};
 use tracing::info;
 use uuid::Uuid;
+use crate::api::extractors::call::CallExtractor;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::play::{PlayOptions, PlaySource};
 use crate::api::state::State;
@@ -44,6 +46,24 @@ pub async fn play(
     let handle = call.lock().await.enqueue_input(source).await;
 
     lock.playback.queue.for_guild(query.guild_id.get()).push(handle);
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::empty())
+        .unwrap()
+}
+
+pub async fn pause(CallExtractor(call): CallExtractor) -> impl IntoResponse {
+    let _ = call.lock().await.queue().pause();
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::empty())
+        .unwrap()
+}
+
+pub async fn resume(CallExtractor(call): CallExtractor) -> impl IntoResponse {
+    let _ = call.lock().await.queue().resume();
 
     Response::builder()
         .status(StatusCode::OK)
