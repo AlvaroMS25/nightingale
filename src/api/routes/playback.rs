@@ -15,15 +15,15 @@ use crate::api::state::State;
 const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 
 #[derive(Deserialize)]
-pub struct PlaySourceQuery {
+pub struct PlayQuery {
     session: Uuid,
     guild_id: NonZeroU64
 }
 
-pub async fn play_source(
+pub async fn play(
     AxumState(state): AxumState<State>,
     SessionExtractor(session): SessionExtractor,
-    Query(query): Query<PlaySourceQuery>,
+    Query(query): Query<PlayQuery>,
     Json(options): Json<PlayOptions>
 ) -> impl IntoResponse {
     info!("Received play request");
