@@ -9,5 +9,9 @@ pub fn get_router() -> Router<State> {
     Router::new()
         .route("/connect", put(gateway::connect))
         .route("/disconnect", put(gateway::disconnect))
-        .route("/play", put(playback::play))
+        .nest("/playback", Router::new()
+            .route("/play", put(playback::play))
+            .route("/pause", put(playback::pause))
+            .route("/resume", put(playback::resume))
+        )
 }
