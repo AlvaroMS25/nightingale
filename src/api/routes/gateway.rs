@@ -48,7 +48,7 @@ pub async fn disconnect(
     SessionExtractor(session): SessionExtractor,
     Query(query): Query<DisconnectQuery>
 ) -> impl IntoResponse {
-    let _ = session.read().await.playback.songbird.leave(query.guild_id).await;
+    let _ = session.read().await.playback.songbird.remove(query.guild_id).await;
 
     Response::builder()
         .status(StatusCode::OK)
