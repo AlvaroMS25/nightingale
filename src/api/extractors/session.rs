@@ -26,7 +26,7 @@ impl FromRequestParts<State> for SessionExtractor {
         }
 
         let Query(query) = Query::<SessionQuery>::from_request_parts(parts, state).await
-            .map_err(|e| {
+            .map_err(|_| {
                 Response::builder()
                     .status(StatusCode::BAD_REQUEST)
                     .header(
