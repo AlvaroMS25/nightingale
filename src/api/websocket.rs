@@ -18,7 +18,7 @@ use crate::api::model::Incoming;
 use crate::api::session::Session;
 use crate::api::state::State;
 use crate::tri;
-use crate::api::extractors::session::SESSION_NOT_PRESENT;
+use crate::api::extractors::session::{SESSION_NOT_PRESENT, SessionExtractor};
 use crate::api::model::resume::ResumeSession;
 use crate::channel::Receiver;
 
@@ -48,20 +48,16 @@ pub async fn connect(
 pub async fn resume(
     AxumState(state): AxumState<State>,
     ws: WebSocketUpgrade,
-    Query(session): Query<SessionQuery>
+    SessionExtractor(session): SessionExtractor
 ) -> impl IntoResponse {
-    if !state.instances.contains_key(&session.session) {
-        Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body(Body::from(SESSION_NOT_PRESENT))
-            .unwrap()
-    } else if state.instances.get(&session.session).unwrap().read().await.playback.receiver.is_none() {
+    if session.read().await.playback.receiver.is_none() {
       Response::builder()
           .status(StatusCode::CONFLICT)
           .body(Body::from(r#"{"message": "session taken"}"#))
           .unwrap()
     } else {
-        ws.on_upgrade(move |ws| initialize_websocket(state, ws, session.session, true))
+        let session_id = session.read().await.id;
+        ws.on_upgrade(move |ws| initialize_websocket(state, ws, session_id, true))
     }
 }
 

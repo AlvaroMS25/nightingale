@@ -4,7 +4,9 @@ use axum::extract::{Query, State as AxumState};
 use axum::http::StatusCode;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
+use serde::Deserialize;
 use songbird::input::{Input, YoutubeDl};
+use tracing::info;
 use uuid::Uuid;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::play::{PlayOptions, PlaySource};
@@ -12,6 +14,7 @@ use crate::api::state::State;
 
 const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 
+#[derive(Deserialize)]
 pub struct PlaySourceQuery {
     session: Uuid,
     guild_id: NonZeroU64
@@ -23,6 +26,7 @@ pub async fn play_source(
     Query(query): Query<PlaySourceQuery>,
     Json(options): Json<PlayOptions>
 ) -> impl IntoResponse {
+    info!("Received play request");
     let source: Input = match options.source {
         PlaySource::Bytes(bytes) => bytes.into(),
         PlaySource::Link(link) => YoutubeDl::new(state.http.clone(), link).into()
