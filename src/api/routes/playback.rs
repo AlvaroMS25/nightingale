@@ -1,7 +1,7 @@
 use std::num::NonZeroU64;
 use std::ops::Deref;
 use axum::body::Body;
-use axum::extract::{Query, State as AxumState};
+use axum::extract::{Path, Query, State as AxumState};
 use axum::http::StatusCode;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
@@ -64,6 +64,22 @@ pub async fn pause(CallExtractor(call): CallExtractor) -> impl IntoResponse {
 
 pub async fn resume(CallExtractor(call): CallExtractor) -> impl IntoResponse {
     let _ = call.lock().await.queue().resume();
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::empty())
+        .unwrap()
+}
+
+pub async fn volume(
+    CallExtractor(call): CallExtractor,
+    Path(volume): Path<f32>
+) -> impl IntoResponse {
+    call.lock().await.queue().modify_queue(|q| {
+        for item in q.iter() {
+            let _ = item.set_volume(volume);
+        }
+    });
 
     Response::builder()
         .status(StatusCode::OK)

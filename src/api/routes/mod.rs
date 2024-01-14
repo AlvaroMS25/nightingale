@@ -13,5 +13,6 @@ pub fn get_router() -> Router<State> {
             .route("/play", put(playback::play))
             .route("/pause", put(playback::pause))
             .route("/resume", put(playback::resume))
+            .route("/volume/:vol", patch(playback::volume))
         )
 }
