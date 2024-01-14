@@ -2,6 +2,7 @@ use serde_json::Value;
 use twilight_model::gateway::payload::incoming::{VoiceServerUpdate, VoiceStateUpdate};
 use twilight_model::voice::VoiceState;
 use twilight_model::gateway::event::Event;
+use crate::api::model::track::Track;
 use super as model;
 
 #[derive(serde::Deserialize, Debug)]
@@ -37,5 +38,25 @@ pub enum Outgoing {
         shard: u64,
         payload: Value
     },
-    Ready(model::ready::Ready)
+    Ready(model::ready::Ready),
+    Event {
+        guild: u64,
+        event: OutgoingEvent
+    }
+}
+
+#[non_exhaustive]
+#[derive(serde::Serialize, Debug)]
+#[serde(tag = "type", content = "data")]
+#[serde(rename_all = "snake_case")]
+pub enum OutgoingEvent {
+    TrackStart(Track),
+    TrackEnd {
+        stopped: bool,
+        track: Track
+    },
+    TrackErrored {
+        error: String,
+        track: Track
+    }
 }
