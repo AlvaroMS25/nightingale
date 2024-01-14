@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use serde_json::Value;
+use std::sync::Arc;
 use songbird::id::UserId;
 use songbird::Songbird;
 use crate::channel::Receiver;
@@ -13,7 +11,7 @@ mod queue;
 pub struct Playback {
     pub songbird: Songbird,
     pub sharder: Arc<Sharder>,
-    pub receiver: Option<Receiver<Value>>,
+    pub receiver: Option<Receiver>,
     pub queue: Queue
 }
 

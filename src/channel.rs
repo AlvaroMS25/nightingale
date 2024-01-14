@@ -8,18 +8,18 @@ use songbird::id::{ChannelId, GuildId};
 use songbird::shards::VoiceUpdate;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::error::SendError;
+use crate::api::model::gateway::Outgoing;
 
-pub struct Sender<T>(mpsc::UnboundedSender<(u64, T)>);
-pub struct Receiver<T>(mpsc::UnboundedReceiver<(u64, T)>);
+pub struct Sender(mpsc::UnboundedSender<Outgoing>);
+pub struct Receiver(mpsc::UnboundedReceiver<Outgoing>);
 
-impl<T> Sender<T> {
-    fn send(&self, value: (u64, T)) -> Result<(), SendError<T>> {
+impl Sender {
+    fn send(&self, value: Outgoing) -> Result<(), SendError<Outgoing>> {
         self.0.send(value)
-            .map_err(|e| SendError(e.0.1))
     }
 }
 
-pub fn new<T>() -> (Sender<T>, Receiver<T>) {
+pub fn new<T>() -> (Sender, Receiver) {
     let (tx, rx) = mpsc::unbounded_channel();
 
     (
@@ -28,30 +28,36 @@ pub fn new<T>() -> (Sender<T>, Receiver<T>) {
     )
 }
 
-impl<T> Sender<T> {
-    pub fn for_shard(&self, shard_ud: u64) -> ForShard<T> {
+impl Sender {
+    pub fn for_shard(&self, shard_ud: u64) -> ForShard {
         ForShard::new(self, shard_ud)
     }
 }
 
-pub struct ForShard<'a, T> {
+pub struct ForShard<'a> {
     shard_id: u64,
-    sender: &'a Sender<T>
+    sender: &'a Sender
 }
 
-impl<'a, T> ForShard<'a, T> {
-    pub fn new(sender: &'a Sender<T>, shard_id: u64) -> Self {
+impl<'a> ForShard<'a> {
+    pub fn new(sender: &'a Sender, shard_id: u64) -> Self {
         Self {
             shard_id,
             sender
         }
     }
 
-    pub fn send(&self, value: T) -> Result<(), SendError<T>> {
-        self.sender.send((self.shard_id, value))
+    pub fn send(&self, value: Value) -> Result<(), SendError<Value>> {
+        self.sender.send(Outgoing::Forward {
+            shard: self.shard_id,
+            payload: value
+        }).map_err(|e| {
+            let Outgoing::Forward { payload, ..} = e.0 else { unreachable!() };
+            SendError(payload)
+        })
     }
 
-    pub fn into_owned(self) -> ForShardOwned<T> {
+    pub fn into_owned(self) -> ForShardOwned {
         ForShardOwned {
             shard_id: self.shard_id,
             sender: self.sender.clone()
@@ -59,25 +65,28 @@ impl<'a, T> ForShard<'a, T> {
     }
 }
 
-pub struct ForShardOwned<T> {
+pub struct ForShardOwned {
     shard_id: u64,
-    sender: Sender<T>
+    sender: Sender
 }
 
-impl<T> ForShardOwned<T> {
-    pub fn send(&self, value: T) -> Result<(), SendError<T>> {
-        self.sender.send((self.shard_id, value))
+impl ForShardOwned {
+    pub fn send(&self, value: Value) -> Result<(), SendError<Value>> {
+        ForShard {
+            shard_id: self.shard_id,
+            sender: &self.sender
+        }.send(value)
     }
 }
 
-impl<T> Clone for Sender<T> {
+impl Clone for Sender {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
 }
 
-impl<T> Stream for Receiver<T> {
-    type Item = (u64, T);
+impl<T> Stream for Receiver {
+    type Item = Outgoing;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.get_mut().0.poll_recv(cx)
@@ -85,7 +94,7 @@ impl<T> Stream for Receiver<T> {
 }
 
 #[async_trait::async_trait]
-impl VoiceUpdate for ForShardOwned<Value> {
+impl VoiceUpdate for ForShardOwned {
     async fn update_voice_state(
         &self,
         guild_id: GuildId,

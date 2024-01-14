@@ -6,8 +6,8 @@ use crate::channel::{ForShardOwned, Sender};
 
 pub struct Sharder {
     pub shard_count: u64,
-    pub sender: Sender<Value>,
-    pub map: DashMap<u64, Arc<ForShardOwned<Value>>>
+    pub sender: Sender,
+    pub map: DashMap<u64, Arc<ForShardOwned>>
 }
 
 impl GenericSharder for Sharder {
