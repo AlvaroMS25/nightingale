@@ -14,7 +14,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
 use crate::abort::Abort;
-use crate::api::model::Incoming;
+use crate::api::model::gateway::Incoming;
 use crate::api::session::Session;
 use crate::api::state::State;
 use crate::tri;
@@ -151,7 +151,7 @@ impl WebSocketHandler<'_> {
     }
 
     async fn handle_message(&mut self, msg: Incoming) {
-        trace!("Received message: {msg:?}");
+        debug!("Received message: {msg:?}");
         if msg.is_voice_event() {
             debug!("Received a voice event, forwarding to songbird");
             self.session.read().await.playback.songbird.process(&msg.into()).await;
