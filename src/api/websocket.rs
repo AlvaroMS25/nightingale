@@ -14,12 +14,12 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
 use crate::abort::Abort;
-use crate::api::model::gateway::Incoming;
+use crate::api::model::gateway::{Incoming, Outgoing};
 use crate::api::session::Session;
 use crate::api::state::State;
 use crate::tri;
 use crate::api::extractors::session::{SESSION_NOT_PRESENT, SessionExtractor};
-use crate::api::model::resume::ResumeSession;
+use crate::api::model::ready::Ready;
 use crate::channel::Receiver;
 
 #[derive(serde::Deserialize)]
@@ -102,7 +102,7 @@ struct WebSocketHandler<'a> {
     id: Uuid,
     socket: WebSocket,
     state: State,
-    receiver: &'a mut Receiver<Value>,
+    receiver: &'a mut Receiver,
     session: Arc<RwLock<Session>>,
     abort: Abort
 }
@@ -119,7 +119,7 @@ impl WebSocketHandler<'_> {
                     todo!("cleanup")
                 },
                 Some(msg) = self.receiver.next() => {
-                    self.send_to_shard(msg.0, msg.1).await;
+                    self.send(msg).await;
                 },
                 Some(msg) = self.socket.next() => {
                     self.handle_possible_error(msg).await;
@@ -164,28 +164,13 @@ impl WebSocketHandler<'_> {
     }
 
     async fn resume_if_needed(&mut self, resume: bool) {
-        self.send(ResumeSession {
+        self.send(Outgoing::Ready(Ready {
             resumed: resume,
             session: self.id
-        }).await
+        })).await
     }
 
-    async fn send_to_shard<T>(&mut self, shard_id: u64, value: T)
-    where
-        T: Serialize
-    {
-        let payload = json!({
-            "shard": shard_id,
-            "data": tri!(serde_json::to_value(value))
-        });
-
-        tri!(self.socket.send(Message::Text(tri!(serde_json::to_string(&payload)))).await)
-    }
-
-    async fn send<T>(&mut self, value: T)
-    where
-        T: Serialize
-    {
+    async fn send(&mut self, value: Outgoing) {
         tri!(self.socket.send(Message::Text(tri!(serde_json::to_string(&value)))).await)
     }
 }
