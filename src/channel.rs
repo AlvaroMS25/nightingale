@@ -14,7 +14,7 @@ pub struct Sender(mpsc::UnboundedSender<Outgoing>);
 pub struct Receiver(mpsc::UnboundedReceiver<Outgoing>);
 
 impl Sender {
-    fn send(&self, value: Outgoing) -> Result<(), SendError<Outgoing>> {
+    pub fn send(&self, value: Outgoing) -> Result<(), SendError<Outgoing>> {
         self.0.send(value)
     }
 }
