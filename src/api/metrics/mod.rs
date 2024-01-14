@@ -19,7 +19,7 @@ impl MetricsExt for Call {
     async fn register_metrics(&mut self, session: Arc<RwLock<Session>>) {
         self.add_global_event(
             Event::Periodic(Duration::from_secs(5), None),
-            PeriodicMetrics::new(Arc::clone(&session))
-        )
+            PeriodicMetrics::new(Arc::clone(&session)).await
+        );
     }
 }
