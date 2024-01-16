@@ -85,7 +85,7 @@ impl Clone for Sender {
     }
 }
 
-impl<T> Stream for Receiver {
+impl Stream for Receiver {
     type Item = Outgoing;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
