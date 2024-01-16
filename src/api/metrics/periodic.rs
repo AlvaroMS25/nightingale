@@ -20,8 +20,8 @@ impl PeriodicMetrics {
     }
 }
 
+#[async_trait::async_trait]
 impl EventHandler for PeriodicMetrics {
-    #[async_trait::async_trait]
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         None
     }
