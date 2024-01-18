@@ -19,7 +19,7 @@ impl Sender {
     }
 }
 
-pub fn new<T>() -> (Sender, Receiver) {
+pub fn new() -> (Sender, Receiver) {
     let (tx, rx) = mpsc::unbounded_channel();
 
     (
