@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use uuid::Uuid;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Ready {
     pub session: Uuid,
     pub resumed: bool
