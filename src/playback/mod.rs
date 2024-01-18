@@ -8,6 +8,7 @@ use crate::playback::sharder::Sharder;
 mod sharder;
 mod queue;
 pub mod metadata;
+mod resume;
 
 pub struct Playback {
     pub songbird: Songbird,

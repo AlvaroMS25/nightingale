@@ -3,7 +3,7 @@ use twilight_model::gateway::payload::incoming::{VoiceServerUpdate, VoiceStateUp
 use twilight_model::voice::VoiceState;
 use twilight_model::gateway::event::Event;
 use crate::api::model::track::Track;
-use super as model;
+use crate::api::model;
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "op", content = "data")]
