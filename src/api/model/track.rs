@@ -1,8 +1,8 @@
 use std::time::Duration;
-use serde::Deserialize;
+use serde::Serialize;
 use songbird::input::AuxMetadata;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Debug)]
 pub struct Track {
     pub track: Option<String>,
     pub artist: Option<String>,
