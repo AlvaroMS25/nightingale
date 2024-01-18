@@ -3,6 +3,7 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::task::{Context, Poll, Waker};
+use std::fmt;
 
 #[derive(Clone)]
 pub struct Abort(Arc<Inner>);
@@ -60,5 +61,11 @@ impl Future for AbortFuture {
             });
             Poll::Pending
         }
+    }
+}
+
+impl fmt::Debug for Abort {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Abort").finish()
     }
 }

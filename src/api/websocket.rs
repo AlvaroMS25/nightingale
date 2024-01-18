@@ -1,3 +1,4 @@
+use std::fmt;
 use std::future::Future;
 use std::num::NonZeroU64;
 use std::sync::Arc;
@@ -108,6 +109,7 @@ struct WebSocketHandler<'a> {
 }
 
 impl WebSocketHandler<'_> {
+    #[tracing::instrument(skip(resume))]
     async fn run(mut self, resume: bool) {
         info!("Websocket connection established");
         self.resume_if_needed(resume).await;
@@ -172,5 +174,15 @@ impl WebSocketHandler<'_> {
 
     async fn send(&mut self, value: Outgoing) {
         tri!(self.socket.send(Message::Text(tri!(serde_json::to_string(&value)))).await)
+    }
+}
+
+impl fmt::Debug for WebSocketHandler<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WebSocketHandler")
+            .field("id", &self.id)
+            .field("socket", &self.socket)
+            .field("abort", &self.abort)
+            .finish()
     }
 }
