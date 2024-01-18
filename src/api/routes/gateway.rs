@@ -5,8 +5,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use tracing::{info, warn};
-use uuid::Uuid;
 use crate::api::extractors::session::SessionExtractor;
+use crate::api::metrics::MetricsExt;
 
 #[derive(Deserialize)]
 pub struct ConnectQuery {
@@ -22,8 +22,10 @@ pub async fn connect(
     tokio::spawn(async move {
         let mut lock = session.read().await;
         match lock.playback.songbird.join(query.guild_id, query.channel_id).await {
-            Ok(_) => {
+            Ok(call) => {
                 info!("Connecting voice on guild {} and channel id {}", query.guild_id, query.channel_id);
+                drop(lock);
+                call.lock().await.register_metrics(session).await;
             },
             Err(error) => {
                 warn!("An error occurred when connecting voice on guild {}, error: {}", query.guild_id, error);
