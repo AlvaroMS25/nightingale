@@ -11,7 +11,7 @@ pub struct TrackMetadata {
 
 impl TrackMetadata {
     pub fn track(&self) -> Track {
-        self.metadata.into()
+        (&self.metadata).into()
     }
 }
 
