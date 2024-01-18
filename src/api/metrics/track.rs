@@ -46,7 +46,7 @@ impl EventHandler for TrackMetrics {
                 error: error.to_string(),
                 track: metadata.track()
             },
-            _ => {}
+            _ => return None,
         };
 
         let event = Outgoing::Event {
