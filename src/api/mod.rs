@@ -11,7 +11,6 @@ mod websocket;
 pub mod session;
 mod routes;
 mod extractors;
-pub mod metrics;
 
 const APPLICATION_JSON: &str = "application/json";
 

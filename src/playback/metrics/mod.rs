@@ -2,9 +2,9 @@ use std::sync::Arc;
 use std::time::Duration;
 use songbird::{Call, CoreEvent, Event, EventHandler, TrackEvent};
 use tokio::sync::RwLock;
-use crate::api::metrics::driver::DriverMetrics;
-use crate::api::metrics::periodic::PeriodicMetrics;
-use crate::api::metrics::track::TrackMetrics;
+use crate::playback::metrics::driver::DriverMetrics;
+use crate::playback::metrics::periodic::PeriodicMetrics;
+use crate::playback::metrics::track::TrackMetrics;
 use crate::api::session::Session;
 
 mod periodic;

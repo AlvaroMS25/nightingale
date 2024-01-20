@@ -1,12 +1,12 @@
 use std::sync::Arc;
 use dashmap::DashMap;
 use songbird::id::{ChannelId, GuildId, UserId};
-use songbird::{Call, Songbird};
+use songbird::Call;
 use songbird::error::JoinResult;
 use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::RwLock;
 use twilight_model::gateway::event::Event;
-use crate::api::metrics::MetricsExt;
+use metrics::MetricsExt;
 use crate::api::session::Session;
 use crate::channel::Receiver;
 use crate::playback::queue::Queue;
@@ -16,6 +16,7 @@ mod sharder;
 mod queue;
 pub mod metadata;
 mod resume;
+pub mod metrics;
 
 pub struct Playback {
     calls: DashMap<GuildId, Arc<RwLock<Call>>>,

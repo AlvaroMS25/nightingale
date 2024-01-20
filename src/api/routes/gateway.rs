@@ -7,7 +7,7 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use tracing::{info, warn};
 use crate::api::extractors::session::SessionExtractor;
-use crate::api::metrics::MetricsExt;
+use crate::playback::metrics::MetricsExt;
 
 #[derive(Deserialize)]
 pub struct ConnectQuery {
