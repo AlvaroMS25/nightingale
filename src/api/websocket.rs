@@ -156,7 +156,8 @@ impl WebSocketHandler<'_> {
         debug!("Received message: {msg:?}");
         if msg.is_voice_event() {
             debug!("Received a voice event, forwarding to songbird");
-            self.session.read().await.playback.songbird.process(&msg.into()).await;
+            self.session.read().await.playback.process_event(msg.into()).await;
+            debug!("Event forwarded");
             return;
         }
 
@@ -181,7 +182,7 @@ impl fmt::Debug for WebSocketHandler<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WebSocketHandler")
             .field("id", &self.id)
-            .field("socket", &self.socket)
+            .field("socket", &"WebSocket")
             .field("abort", &self.abort)
             .finish()
     }

@@ -7,14 +7,14 @@ use axum::http::StatusCode;
 use axum::response::Response;
 use serde::Deserialize;
 use songbird::Call;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::state::State;
 
 const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 pub const MISSING_GUILD_ID: &str = r#"{"message": "Missing guild ID"}"#;
 
-pub struct CallExtractor(pub Arc<Mutex<Call>>);
+pub struct CallExtractor(pub Arc<RwLock<Call>>);
 
 #[async_trait::async_trait]
 impl FromRequestParts<State> for CallExtractor {
@@ -41,7 +41,7 @@ impl FromRequestParts<State> for CallExtractor {
 
         let lock = session.read().await;
 
-        let Some(call) = lock.playback.songbird.get(query.guild_id) else {
+        let Some(call) = lock.playback.get_call(query.guild_id) else {
             return Err(
                 Response::builder()
                     .status(StatusCode::BAD_REQUEST)

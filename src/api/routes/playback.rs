@@ -58,14 +58,14 @@ pub async fn play(
 
     let mut lock = session.write().await;
 
-    let Some(call) = lock.playback.songbird.get(query.guild_id) else {
+    let Some(call) = lock.playback.get_call(query.guild_id) else {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Body::from(NOT_CONNECTED))
             .unwrap();
     };
 
-    let handle = call.lock().await.enqueue_input(source).await;
+    let handle = call.write().await.enqueue_input(source).await;
 
     handle.typemap().write().await.insert::<TrackMetadata>(metadata);
 
@@ -78,7 +78,7 @@ pub async fn play(
 }
 
 pub async fn pause(CallExtractor(call): CallExtractor) -> impl IntoResponse {
-    let _ = call.lock().await.queue().pause();
+    let _ = call.read().await.queue().pause();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -87,7 +87,7 @@ pub async fn pause(CallExtractor(call): CallExtractor) -> impl IntoResponse {
 }
 
 pub async fn resume(CallExtractor(call): CallExtractor) -> impl IntoResponse {
-    let _ = call.lock().await.queue().resume();
+    let _ = call.read().await.queue().resume();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -99,7 +99,7 @@ pub async fn volume(
     CallExtractor(call): CallExtractor,
     Path(volume): Path<f32>
 ) -> impl IntoResponse {
-    call.lock().await.queue().modify_queue(|q| {
+    call.read().await.queue().modify_queue(|q| {
         for item in q.iter() {
             let _ = item.set_volume(volume);
         }

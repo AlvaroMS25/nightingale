@@ -1,4 +1,5 @@
 use std::num::NonZeroU64;
+use std::sync::Arc;
 use axum::body::Body;
 use axum::extract::Query;
 use axum::http::StatusCode;
@@ -21,15 +22,14 @@ pub async fn connect(
     info!("Incoming connection request");
     tokio::spawn(async move {
         let mut lock = session.read().await;
-        match lock.playback.songbird.join(query.guild_id, query.channel_id).await {
+        
+        match lock.playback.join(query.guild_id, query.channel_id, Arc::clone(&session)).await {
             Ok(call) => {
                 info!("Connecting voice on guild {} and channel id {}", query.guild_id, query.channel_id);
-                drop(lock);
-                call.lock().await.register_metrics(session).await;
             },
             Err(error) => {
                 warn!("An error occurred when connecting voice on guild {}, error: {}", query.guild_id, error);
-                let _ = lock.playback.songbird.leave(query.guild_id).await;
+                let _ = lock.playback.leave(query.guild_id).await;
             }
         }
     });
@@ -50,7 +50,7 @@ pub async fn disconnect(
     SessionExtractor(session): SessionExtractor,
     Query(query): Query<DisconnectQuery>
 ) -> impl IntoResponse {
-    let _ = session.read().await.playback.songbird.remove(query.guild_id).await;
+    let _ = session.write().await.playback.leave(query.guild_id).await;
 
     Response::builder()
         .status(StatusCode::OK)
