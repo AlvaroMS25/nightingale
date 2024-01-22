@@ -57,5 +57,27 @@ impl MetricsExt for Call {
             ],
             DriverMetrics::new(session).await
         );
+
+        chain_events(
+            &mut self,
+            [
+                CoreEvent::DriverConnect,
+                CoreEvent::DriverDisconnect,
+                CoreEvent::DriverReconnect
+            ],
+            DebugEvents
+        );
+    }
+}
+
+#[derive(Clone)]
+pub struct DebugEvents;
+
+#[async_trait::async_trait]
+impl EventHandler for DebugEvents {
+    #[tracing::instrument(skip(self, ctx))]
+    async fn act(&self, ctx: &songbird::EventContext<'_>) -> Option<Event> {
+        tracing::info!("Debug event: {ctx:?}");
+        None
     }
 }
