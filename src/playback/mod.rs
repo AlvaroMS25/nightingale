@@ -6,7 +6,7 @@ use songbird::error::JoinResult;
 use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::RwLock;
 use twilight_model::gateway::event::Event;
-use events::MetricsExt;
+use events::EventsExt;
 use crate::api::session::Session;
 use crate::channel::Receiver;
 use crate::playback::queue::Queue;
@@ -67,18 +67,13 @@ impl Playback {
                 .unwrap()
         } else {
             let shard = shard_id(guild.0.get(), self.sharder.shard_count);
-            let mut c = Call::from_config(
+            let call = Arc::new(RwLock::new(Call::from_config(
                 guild,
                 Shard::Generic(self.sharder.get_shard(shard).expect("Failed to create Call, shard count incorrect")),
                 self.user_id,
                 Default::default()
-            );
-            c.register_metrics(s).await;
-            let call = Arc::new(RwLock::new(c));
-            call.write().await.add_global_event(
-                songbird::CoreEvent::DriverConnect.into(),
-                events::resume::ResumeOnMove::new(Arc::clone(&call))
-            );
+            )));
+            call.register_events(s).await;
 
             self.calls.insert(guild, Arc::clone(&call));
             call

@@ -13,8 +13,8 @@ mod driver;
 pub mod resume;
 
 #[async_trait::async_trait]
-pub trait MetricsExt {
-    async fn register_metrics(&mut self, session: Arc<RwLock<Session>>);
+pub trait EventsExt {
+    async fn register_events(&self, session: Arc<RwLock<Session>>);
 }
 
 fn chain_events<I, T, H>(call: &mut Call, events: I, handler: H)
@@ -32,15 +32,17 @@ where
 }
 
 #[async_trait::async_trait]
-impl MetricsExt for Call {
-    async fn register_metrics(&mut self, session: Arc<RwLock<Session>>) {
-        self.add_global_event(
+impl EventsExt for Arc<RwLock<Call>> {
+    async fn register_events(&self, session: Arc<RwLock<Session>>) {
+        let mut call = self.write().await;
+        
+        call.add_global_event(
             Event::Periodic(Duration::from_secs(5), None),
             PeriodicMetrics::new(Arc::clone(&session)).await
         );
 
         chain_events(
-            &mut self,
+            &mut call,
             [
                 TrackEvent::Play,
                 TrackEvent::End,
@@ -50,7 +52,7 @@ impl MetricsExt for Call {
         );
 
         chain_events(
-            &mut self,
+            &mut call,
             [
                 CoreEvent::DriverConnect,
                 CoreEvent::DriverDisconnect,
@@ -60,13 +62,18 @@ impl MetricsExt for Call {
         );
 
         chain_events(
-            &mut self,
+            &mut call,
             [
                 CoreEvent::DriverConnect,
                 CoreEvent::DriverDisconnect,
                 CoreEvent::DriverReconnect
             ],
             DebugEvents
+        );
+
+        call.add_global_event(
+            songbird::CoreEvent::DriverConnect.into(),
+            resume::ResumeOnMove::new(Arc::clone(&self))
         );
     }
 }
