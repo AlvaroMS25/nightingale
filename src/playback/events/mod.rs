@@ -10,6 +10,7 @@ use crate::api::session::Session;
 mod periodic;
 mod track;
 mod driver;
+pub mod resume;
 
 #[async_trait::async_trait]
 pub trait MetricsExt {

@@ -16,7 +16,6 @@ mod mock;
 mod sharder;
 mod queue;
 pub mod metadata;
-mod resume;
 pub mod events;
 
 pub struct Playback {
@@ -78,7 +77,7 @@ impl Playback {
             let call = Arc::new(RwLock::new(c));
             call.write().await.add_global_event(
                 songbird::CoreEvent::DriverConnect.into(),
-                resume::ResumeOnMove::new(Arc::clone(&call))
+                events::resume::ResumeOnMove::new(Arc::clone(&call))
             );
 
             self.calls.insert(guild, Arc::clone(&call));
