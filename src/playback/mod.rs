@@ -6,7 +6,7 @@ use songbird::error::JoinResult;
 use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::RwLock;
 use twilight_model::gateway::event::Event;
-use metrics::MetricsExt;
+use events::MetricsExt;
 use crate::api::session::Session;
 use crate::channel::Receiver;
 use crate::playback::queue::Queue;
@@ -17,7 +17,7 @@ mod sharder;
 mod queue;
 pub mod metadata;
 mod resume;
-pub mod metrics;
+pub mod events;
 
 pub struct Playback {
     calls: DashMap<GuildId, Arc<RwLock<Call>>>,
