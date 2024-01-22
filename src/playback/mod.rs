@@ -12,6 +12,7 @@ use crate::channel::Receiver;
 use crate::playback::queue::Queue;
 use crate::playback::sharder::Sharder;
 
+mod mock;
 mod sharder;
 mod queue;
 pub mod metadata;
@@ -75,6 +76,11 @@ impl Playback {
             );
             c.register_metrics(s).await;
             let call = Arc::new(RwLock::new(c));
+            call.write().await.add_global_event(
+                songbird::CoreEvent::DriverConnect.into(),
+                resume::ResumeOnMove::new(Arc::clone(&call))
+            );
+
             self.calls.insert(guild, Arc::clone(&call));
             call
         };
