@@ -7,6 +7,7 @@ use crate::channel::Sender;
 
 #[derive(Clone)]
 pub struct DriverMetrics {
+    #[allow(unused)]
     session: Arc<RwLock<Session>>,
     sender: Sender
 }

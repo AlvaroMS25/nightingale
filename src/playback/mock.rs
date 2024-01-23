@@ -40,13 +40,13 @@ impl MediaSource for MockMediaSource {
 }
 
 impl io::Read for MockMediaSource {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+    fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
         Ok(0)
     }
 }
 
 impl io::Seek for MockMediaSource {
-    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
+    fn seek(&mut self, _: io::SeekFrom) -> io::Result<u64> {
         Ok(0)
     }
 }

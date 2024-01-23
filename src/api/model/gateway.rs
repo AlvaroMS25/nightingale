@@ -24,7 +24,6 @@ impl Into<Event> for Incoming {
         match self {
             Self::UpdateVoiceServer(update) => Event::VoiceServerUpdate(update),
             Self::UpdateVoiceState(state) => Event::VoiceStateUpdate(Box::new(VoiceStateUpdate(state))),
-            _ => unreachable!()
         }
     }
 }

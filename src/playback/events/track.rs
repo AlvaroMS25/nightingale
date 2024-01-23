@@ -9,6 +9,7 @@ use crate::playback::metadata::TrackMetadata;
 
 #[derive(Clone)]
 pub struct TrackMetrics {
+    #[allow(unused)]
     session: Arc<RwLock<Session>>,
     sender: Sender
 }

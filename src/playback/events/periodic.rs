@@ -5,7 +5,9 @@ use crate::api::session::Session;
 use crate::channel::Sender;
 
 pub struct PeriodicMetrics {
+    #[allow(unused)]
     session: Arc<RwLock<Session>>,
+    #[allow(unused)]
     sender: Sender
 }
 
@@ -23,6 +25,7 @@ impl PeriodicMetrics {
 #[async_trait::async_trait]
 impl EventHandler for PeriodicMetrics {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
+        let _ = ctx;
         None
     }
 }

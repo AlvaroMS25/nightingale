@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use dashmap::DashMap;
-use serde_json::Value;
 use songbird::shards::{GenericSharder, VoiceUpdate};
 use crate::channel::{ForShardOwned, Sender};
 

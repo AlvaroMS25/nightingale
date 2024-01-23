@@ -1,8 +1,8 @@
 use std::io::Read;
 use serde::de::DeserializeOwned;
 use crate::error::Error;
-use crate::ext::ReadExt;
 
+#[allow(unused)]
 pub fn deserialize_json<R, M>(source: R) -> Result<M, Error>
 where
     R: Read,

@@ -1,5 +1,4 @@
 use std::num::NonZeroU64;
-use std::ops::Deref;
 use axum::body::Body;
 use axum::extract::{Path, Query, State as AxumState};
 use axum::http::StatusCode;
@@ -8,7 +7,6 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use songbird::input::{AuxMetadata, Compose, Input, YoutubeDl};
 use tracing::info;
-use uuid::Uuid;
 use crate::api::extractors::call::CallExtractor;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::play::{PlayOptions, PlaySource};
@@ -19,7 +17,6 @@ const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 
 #[derive(Deserialize)]
 pub struct PlayQuery {
-    session: Uuid,
     guild_id: NonZeroU64
 }
 

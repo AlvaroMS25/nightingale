@@ -1,4 +1,4 @@
-use axum::{Router, ServiceExt};
+use axum::Router;
 use axum::routing::get;
 use tracing::info;
 use crate::api::state::State;

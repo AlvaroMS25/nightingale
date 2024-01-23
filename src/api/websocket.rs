@@ -1,5 +1,4 @@
 use std::fmt;
-use std::future::Future;
 use std::num::NonZeroU64;
 use std::sync::Arc;
 use axum::body::Body;
@@ -9,17 +8,15 @@ use axum::extract::ws::{Message, WebSocket};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use futures::StreamExt;
-use serde::Serialize;
-use serde_json::{json, Value};
 use tokio::sync::RwLock;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 use crate::abort::Abort;
 use crate::api::model::gateway::{Incoming, Outgoing};
 use crate::api::session::Session;
 use crate::api::state::State;
 use crate::tri;
-use crate::api::extractors::session::{SESSION_NOT_PRESENT, SessionExtractor};
+use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::ready::Ready;
 use crate::channel::Receiver;
 
@@ -102,6 +99,7 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
 struct WebSocketHandler<'a> {
     id: Uuid,
     socket: WebSocket,
+    #[allow(unused)]
     state: State,
     receiver: &'a mut Receiver,
     session: Arc<RwLock<Session>>,

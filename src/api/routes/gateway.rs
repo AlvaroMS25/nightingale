@@ -20,10 +20,10 @@ pub async fn connect(
 ) -> impl IntoResponse {
     info!("Incoming connection request");
     tokio::spawn(async move {
-        let mut lock = session.read().await;
+        let lock = session.read().await;
         
         match lock.playback.join(query.guild_id, query.channel_id, Arc::clone(&session)).await {
-            Ok(call) => {
+            Ok(_) => {
                 info!("Connecting voice on guild {} and channel id {}", query.guild_id, query.channel_id);
             },
             Err(error) => {
