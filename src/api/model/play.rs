@@ -1,7 +1,6 @@
-use axum::body::Bytes;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(tag = "type", content = "data")]
 #[serde(rename_all = "snake_case")]
 pub enum PlaySource {
@@ -9,7 +8,7 @@ pub enum PlaySource {
     Bytes(Vec<u8>)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct PlayOptions {
     pub force_play: bool,
