@@ -24,8 +24,4 @@ impl GenericSharder for Sharder {
             }
         }
     }
-
-    fn shard_count(&self) -> u64 {
-        self.shard_count
-    }
 }

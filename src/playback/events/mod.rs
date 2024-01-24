@@ -10,7 +10,6 @@ use crate::api::session::Session;
 mod periodic;
 mod track;
 mod driver;
-pub mod resume;
 
 #[async_trait::async_trait]
 pub trait EventsExt {
@@ -69,11 +68,6 @@ impl EventsExt for Arc<RwLock<Call>> {
                 CoreEvent::DriverReconnect
             ],
             DebugEvents
-        );
-
-        call.add_global_event(
-            songbird::CoreEvent::DriverConnect.into(),
-            resume::ResumeOnMove::new(Arc::clone(&self))
         );
     }
 }

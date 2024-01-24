@@ -30,7 +30,7 @@ version = "0.5.3"
 features = ["all"]
 
 [dependencies.songbird]
-git = "https://github.com/AlvaroMS25/songbird.git"
-branch = "next"
+git = "https://github.com/FelixMcFelix/songbird.git"
+branch = "fix-channel-move-play"
 default-features = false
 features = ["twilight", "driver", "gateway", "rustls", "builtin-queue"]
