@@ -19,12 +19,27 @@ const NIGHTINGALE: &str = r#"
          |___/                   |___/
 "#;
 
-fn main() -> Result<(), Error> {
+fn main() {
     println!("{NIGHTINGALE}\n");
 
     println!("Reading nightingale.yml");
 
-    let config = serde_yaml::from_reader::<_, Config>(std::fs::File::open("nightingale.yml")?)?;
+    let file = match std::fs::File::open("nightingale.yml") {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Failed to open nightingale.yml, {e}");
+            return;
+        }
+    };
+
+    let config = match serde_yaml::from_reader::<_, Config>(file) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Failed to read nightingale.yml, {e}");
+            return;
+        }
+    };
+
     println!("Read nightingale.yml");
 
     if config.logging.enable {
@@ -45,8 +60,6 @@ fn main() -> Result<(), Error> {
     info!("Shutting down Nightingale");
 
     rt.shutdown_timeout(Duration::from_secs(5));
-
-    Ok(())
 }
 
 async fn entrypoint(config: Config) -> Result<(), Error> {
