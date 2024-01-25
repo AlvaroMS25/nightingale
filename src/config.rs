@@ -13,6 +13,7 @@ pub struct Config {
 pub struct Server {
     pub address: String,
     pub port: u16,
+    pub password: String,
     #[serde(default)]
     pub http2: bool,
     pub ssl: Option<SslOptions>
