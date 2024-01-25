@@ -1,6 +1,7 @@
 use axum::{body::Body, extract::Request, http::{StatusCode, header}, response::Response};
 use futures_util::future::BoxFuture;
 use tower::{Layer, Service};
+use tracing::warn;
 
 use super::state::State;
 
@@ -45,6 +46,7 @@ where
         match auth {
             Some(a) if a == "" => {},
             _ => return Box::pin(async {
+                warn!("Incorrect or no authorization provided");
                 Ok(Response::builder()
                 .status(StatusCode::UNAUTHORIZED)
                 .header(
