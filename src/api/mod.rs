@@ -1,9 +1,11 @@
 use axum::Router;
 use axum::routing::get;
 use tracing::info;
+use crate::api::auth::RequireAuth;
 use crate::api::state::State;
 use crate::config::Config;
 
+mod auth;
 mod state;
 pub mod model;
 mod tri;
@@ -17,11 +19,14 @@ const APPLICATION_JSON: &str = "application/json";
 pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
     info!("Creating HTTP server");
 
+    let state = State::new();
+
     let router = Router::new()
         .route("/ws", get(websocket::connect))
         .route("/ws/resume", get(websocket::resume))
         .nest("/api/v1", routes::get_router())
-        .with_state(State::new());
+        .layer(RequireAuth(state.clone()))
+        .with_state(state);
 
     info!(
         "Starting HTTP{} server on {}:{}",
