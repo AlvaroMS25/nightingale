@@ -4,6 +4,7 @@ use axum::Router;
 use axum::routing::get;
 use tracing::info;
 use layers::auth::RequireAuth;
+use crate::api::layers::ip::IpFilter;
 use crate::api::state::State;
 use crate::config::Config;
 
@@ -23,12 +24,16 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
 
     let state = State::new();
 
-    let router = Router::new()
+    let mut router = Router::new()
         .route("/ws", get(websocket::connect))
         .route("/ws/resume", get(websocket::resume))
         .nest("/api/v1", routes::get_router())
         .layer(RequireAuth(config.server.password.clone()))
         .with_state(state);
+
+    if let Some(filter) = config.server.filter_ips {
+        router = router.layer(IpFilter(filter));
+    }
 
     info!(
         "Starting HTTP{} server on {}:{}",

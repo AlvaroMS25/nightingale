@@ -1,2 +1,2 @@
 pub mod auth;
-mod ip;
+pub mod ip;
