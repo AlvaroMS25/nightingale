@@ -3,8 +3,6 @@ use futures_util::future::BoxFuture;
 use tower::{Layer, Service};
 use tracing::warn;
 
-use super::state::State;
-
 #[derive(Clone)]
 pub struct RequireAuth(pub String);
 
