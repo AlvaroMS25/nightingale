@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use ipnet::{Ipv4Net, Ipv6Net};
 use serde::Deserialize;
 use tracing::Level;
 
@@ -16,7 +17,8 @@ pub struct Server {
     pub password: String,
     #[serde(default)]
     pub http2: bool,
-    pub ssl: Option<SslOptions>
+    pub ssl: Option<SslOptions>,
+    pub filter_ips: Option<FilterIps>
 }
 
 #[derive(Deserialize, Debug, Default)]
@@ -32,6 +34,12 @@ pub struct SslOptions {
 pub struct LoggingOptions {
     pub enable: bool,
     pub level: LoggingLevel
+}
+
+#[derive(Deserialize, Debug, Copy, Clone)]
+pub struct FilterIps {
+    pub v4: Option<Ipv4Net>,
+    pub v6: Option<Ipv6Net>
 }
 
 impl Default for LoggingOptions {
