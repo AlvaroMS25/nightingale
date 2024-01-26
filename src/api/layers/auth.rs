@@ -6,14 +6,14 @@ use tracing::warn;
 use super::state::State;
 
 #[derive(Clone)]
-pub struct RequireAuth(pub State);
+pub struct RequireAuth(pub String);
 
 impl<S> Layer<S> for RequireAuth {
     type Service = RequireAuthService<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
         RequireAuthService {
-            state: self.0.clone(),
+            password: self.0.clone(),
             inner
         }
     }
@@ -21,7 +21,7 @@ impl<S> Layer<S> for RequireAuth {
 
 #[derive(Clone)]
 pub struct RequireAuthService<S> {
-    state: State,
+    password: String,
     inner: S
 }
 
@@ -44,7 +44,7 @@ where
             .and_then(|header| header.to_str().ok());
 
         match auth {
-            Some(a) if a == "" => {},
+            Some(a) if a == self.password => {},
             _ => return Box::pin(async {
                 warn!("Incorrect or no authorization provided");
                 Ok(Response::builder()

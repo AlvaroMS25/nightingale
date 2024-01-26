@@ -1,11 +1,12 @@
+use std::net::SocketAddr;
+
 use axum::Router;
 use axum::routing::get;
 use tracing::info;
-use crate::api::auth::RequireAuth;
+use layers::auth::RequireAuth;
 use crate::api::state::State;
 use crate::config::Config;
 
-mod auth;
 mod state;
 pub mod model;
 mod tri;
@@ -13,6 +14,7 @@ mod websocket;
 pub mod session;
 mod routes;
 mod extractors;
+mod layers;
 
 const APPLICATION_JSON: &str = "application/json";
 
@@ -36,6 +38,6 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
     );
 
     axum_server::Server::bind(format!("{}:{}", config.server.address, config.server.port).parse().unwrap())
-        .serve(router.into_make_service())
+        .serve(router.into_make_service_with_connect_info::<SocketAddr>())
         .await
 }
