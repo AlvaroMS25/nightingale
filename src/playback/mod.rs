@@ -7,6 +7,7 @@ use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::RwLock;
 use twilight_model::gateway::event::Event;
 use events::EventsExt;
+use crate::api::model::state::VoiceEvent;
 use crate::api::session::Session;
 use crate::channel::Receiver;
 use crate::playback::queue::Queue;
@@ -99,9 +100,9 @@ impl Playback {
         write.leave().await
     }
 
-    pub async fn process_event(&self, event: Event) {
+    pub async fn process_event(&self, event: VoiceEvent) {
         match event {
-            Event::VoiceServerUpdate(su) => {
+            VoiceEvent::UpdateVoiceServer(su) => {
                 let Some(c) = self.calls.get(&(su.guild_id.into())) else {
                     return;
                 };
@@ -111,8 +112,8 @@ impl Playback {
                     write.update_server(endpoint, su.token);
                 }
             },
-            Event::VoiceStateUpdate(su) => {
-                if su.user_id.into_nonzero() != self.user_id.0 {
+            VoiceEvent::UpdateVoiceState(su) => {
+                if su.user_id != self.user_id.0 {
                     return;
                 }
 
@@ -121,7 +122,7 @@ impl Playback {
                 };
 
                 let mut write = c.write().await;
-                write.update_state(su.0.session_id, su.0.channel_id);
+                write.update_state(su.session_id, su.channel_id);
             },
             _ => {}
         }
