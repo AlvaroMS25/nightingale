@@ -4,13 +4,14 @@ use twilight_model::voice::VoiceState;
 use twilight_model::gateway::event::Event;
 use crate::api::model::track::Track;
 use crate::api::model;
+use crate::api::model::state::{UpdateVoiceServer, UpdateVoiceState, VoiceEvent};
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "op", content = "data")]
 #[serde(rename_all = "snake_case")]
 pub enum Incoming {
-    UpdateVoiceServer(VoiceServerUpdate),
-    UpdateVoiceState(VoiceState),
+    UpdateVoiceServer(UpdateVoiceServer),
+    UpdateVoiceState(UpdateVoiceState),
 }
 
 impl Incoming {
@@ -19,11 +20,11 @@ impl Incoming {
     }
 }
 
-impl Into<Event> for Incoming {
-    fn into(self) -> Event {
+impl Into<VoiceEvent> for Incoming {
+    fn into(self) -> VoiceEvent {
         match self {
-            Self::UpdateVoiceServer(update) => Event::VoiceServerUpdate(update),
-            Self::UpdateVoiceState(state) => Event::VoiceStateUpdate(Box::new(VoiceStateUpdate(state))),
+            Self::UpdateVoiceServer(update) => VoiceEvent::UpdateVoiceServer(update),
+            Self::UpdateVoiceState(state) => VoiceEvent::UpdateVoiceState(state),
         }
     }
 }
