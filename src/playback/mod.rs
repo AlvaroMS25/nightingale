@@ -103,7 +103,7 @@ impl Playback {
     pub async fn process_event(&self, event: VoiceEvent) {
         match event {
             VoiceEvent::UpdateVoiceServer(su) => {
-                let Some(c) = self.calls.get(&(su.guild_id.into())) else {
+                let Some(c) = self.calls.get(&(su.guild_id.0.into())) else {
                     return;
                 };
 
@@ -113,16 +113,16 @@ impl Playback {
                 }
             },
             VoiceEvent::UpdateVoiceState(su) => {
-                if su.user_id != self.user_id.0 {
+                if su.user_id.0 != self.user_id.0 {
                     return;
                 }
 
-                let Some(c) = su.guild_id.and_then(|g| self.calls.get(&g.into())) else {
+                let Some(c) = su.guild_id.and_then(|g| self.calls.get(&g.0.into())) else {
                     return;
                 };
 
                 let mut write = c.write().await;
-                write.update_state(su.session_id, su.channel_id);
+                write.update_state(su.session_id, su.channel_id.map(|i| i.0));
             },
             _ => {}
         }
