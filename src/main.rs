@@ -9,6 +9,7 @@ mod config;
 mod error;
 mod channel;
 mod abort;
+mod metrics;
 
 const NIGHTINGALE: &str = r#"
  _   _ _       _     _   _                   _
