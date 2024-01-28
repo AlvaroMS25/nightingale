@@ -5,7 +5,6 @@ use songbird::Call;
 use songbird::error::JoinResult;
 use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::RwLock;
-use twilight_model::gateway::event::Event;
 use events::EventsExt;
 use crate::api::model::state::VoiceEvent;
 use crate::api::session::Session;
@@ -124,7 +123,6 @@ impl Playback {
                 let mut write = c.write().await;
                 write.update_state(su.session_id, su.channel_id.map(|i| i.0));
             },
-            _ => {}
         }
     }
 }
