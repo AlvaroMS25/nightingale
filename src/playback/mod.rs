@@ -6,7 +6,7 @@ use songbird::error::JoinResult;
 use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::RwLock;
 use events::EventsExt;
-use crate::api::model::state::VoiceEvent;
+use crate::api::model::voice::VoiceEvent;
 use crate::api::session::Session;
 use crate::channel::Receiver;
 use crate::playback::queue::Queue;

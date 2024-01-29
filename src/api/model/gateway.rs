@@ -1,7 +1,7 @@
 use serde_json::Value;
 use crate::api::model::track::Track;
 use crate::api::model;
-use crate::api::model::state::{UpdateVoiceServer, UpdateVoiceState, VoiceEvent};
+use crate::api::model::voice::{UpdateVoiceServer, UpdateVoiceState, VoiceEvent};
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "op", content = "data")]
