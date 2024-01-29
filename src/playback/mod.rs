@@ -12,7 +12,6 @@ use crate::channel::Receiver;
 use crate::playback::queue::Queue;
 use crate::playback::sharder::Sharder;
 
-mod mock;
 mod sharder;
 mod queue;
 pub mod metadata;
