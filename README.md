@@ -46,14 +46,14 @@ logging: # Optional field
 > Types marked as ``?`` mean are not required but optional
 
 ### Server
-| Field      | Data type                      | Explanation                                             | Example                  |
-|------------|--------------------------------|---------------------------------------------------------|--------------------------|
-| address    | `String`                       | The IP address the server will listen on                | `127.0.0.1` or `"[::1]"` |
-| port       | `Integer`                      | The port the server will listen on                      | `8080`                   |
-| password   | `String`                       | The password used to authenticate on Nightingale routes | `mypassword`             |
-| http2      | `Boolean?` (default `false`)   | Whether if nightingale should use Http2                 | `false`                  |
-| ssl        | `SSlOptions?` (default `null`) | Options for nightingale to use SSL                      | \<Empty>                 |
-| filter_ips | `IpFilter?` (default `null`)   | Options to filter IPs that interact with Nightingale    | \<Empty>                 |
+| Field      | Data type                      | Explanation                                             | Example                           |
+|------------|--------------------------------|---------------------------------------------------------|-----------------------------------|
+| address    | `String`                       | The IP address the server will listen on                | `127.0.0.1` <br/>or<br/>`"[::1]"` |
+| port       | `Integer`                      | The port the server will listen on                      | `8080`                            |
+| password   | `String`                       | The password used to authenticate on Nightingale routes | `mypassword`                      |
+| http2      | `Boolean?` (default `false`)   | Whether if nightingale should use Http2                 | `false`                           |
+| ssl        | `SSlOptions?` (default `null`) | Options for nightingale to use SSL                      | \<Empty>                          |
+| filter_ips | `IpFilter?` (default `null`)   | Options to filter IPs that interact with Nightingale    | \<Empty>                          |
 
 #### SSlOptions
 | Field       | Data type                    | Explanation                                                 | Example          |
