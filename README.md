@@ -41,6 +41,7 @@ logging: # Optional field
   level: info
 ````
 <br>
+
 > [!NOTE]
 > Types marked as ``?`` mean are not required but optional
 
