@@ -32,9 +32,9 @@ Nightingale requires a ``nightingale.yml`` configuration file, which has the fol
 
 ````yaml
 server:
-  address: "127.0.0.1"
+  address: 127.0.0.1
   port: 8081
-  password: "incredibly hard password"
+  password: mypasword
   # ...
 logging: # Optional field
   enable: true
@@ -43,20 +43,39 @@ logging: # Optional field
 
 
 ### Server
-| Field      | Data type                      | Explanation                                             | Example        |
-|------------|--------------------------------|---------------------------------------------------------|----------------|
-| address    | `String`                       | The IP address the server will listen on                | `"127.0.0.1"`  |
-| port       | `Integer`                      | The port the server will listen on                      | `8080`         |
-| password   | `String`                       | The password used to authenticate on Nightingale routes | `"mypassword"` |
-| http2      | `Boolean?` (default `false`)   | Whether if nightingale should use Http2                 | `false`        |
-| ssl        | `SSlOptions?` (default `null`) | Options for nightingale to use SSL                      | \<Empty>       |
-| filter_ips | `IpFilter?` (default `null`)   | Options to filter IPs that interact with Nightingale    | \<Empty>       |
+| Field      | Data type                      | Explanation                                             | Example                  |
+|------------|--------------------------------|---------------------------------------------------------|--------------------------|
+| address    | `String`                       | The IP address the server will listen on                | `127.0.0.1` or `"[::1]"` |
+| port       | `Integer`                      | The port the server will listen on                      | `8080`                   |
+| password   | `String`                       | The password used to authenticate on Nightingale routes | `mypassword`             |
+| http2      | `Boolean?` (default `false`)   | Whether if nightingale should use Http2                 | `false`                  |
+| ssl        | `SSlOptions?` (default `null`) | Options for nightingale to use SSL                      | \<Empty>                 |
+| filter_ips | `IpFilter?` (default `null`)   | Options to filter IPs that interact with Nightingale    | \<Empty>                 |
 
 #### SSlOptions
-| Field     | Data type | Explanation                     | Example          |
-|-----------|-----------|---------------------------------|------------------|
-| enable    | `Boolean` | Whether to enable SSl           | `true`           |
-| cert_path | `String`  | The path to the SSl certificate | `certs/cert.pem` |
+| Field       | Data type                    | Explanation                                                 | Example          |
+|-------------|------------------------------|-------------------------------------------------------------|------------------|
+| enable      | `Boolean`                    | Whether to enable SSl                                       | `true`           |
+| cert_path   | `String`                     | The path to the SSl certificate                             | `certs/cert.pem` |
+| key_path    | `String`                     | The path to the key of the certificate                      | `certs/key.pem`  |
+| use_openssl | `Boolean?` (default `false`) | Whether to use openssl, if not, nightingale will use rustls | `false`          |
+
+#### IpFilter
+| Field | Data type | Explanation                                 | Example          |
+|-------|-----------|---------------------------------------------|------------------|
+| v4    | `Ip/Mask` | The v4 IPs allowed to connect to the server | `192.168.0.0/24` |
+| v6    | `Ip/Mask` | The v6 IPs allowed to connect to the server | `fd00::/32`      |
+
+### Logging
+| Field  | Data type                         | Explanation                      | Example |
+|--------|-----------------------------------|----------------------------------|---------|
+| enable | `Boolean`                         | Whether to enable logging or not | `true`  |
+| level  | `LoggingLevel?` (defaults `info`) | The level of logging to use      | `info`  |
+
+`LoggingLevel` consists of 5 options: `error`, `warn`, `info`, `debug` and `trace`. Ordered from more to less critical.
+
+
+
 
 
 
