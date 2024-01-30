@@ -64,10 +64,10 @@ logging: # Optional field
 | use_openssl | `Boolean?` (default `false`) | Whether to use openssl, if not, nightingale will use rustls | `false`          |
 
 #### IpFilter
-| Field | Data type | Explanation                                 | Example          |
-|-------|-----------|---------------------------------------------|------------------|
-| v4    | `Ip/Mask` | The v4 IPs allowed to connect to the server | `192.168.0.0/24` |
-| v6    | `Ip/Mask` | The v6 IPs allowed to connect to the server | `fd00::/32`      |
+| Field | Data type                 | Explanation                                 | Example          |
+|-------|---------------------------|---------------------------------------------|------------------|
+| v4    | `Ip/Mask` (CIDR notation) | The v4 IPs allowed to connect to the server | `192.168.0.0/24` |
+| v6    | `Ip/Mask` (CIDR notation) | The v6 IPs allowed to connect to the server | `fd00::/32`      |
 
 ### Logging
 | Field  | Data type                         | Explanation                      | Example |
