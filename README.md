@@ -40,7 +40,8 @@ logging: # Optional field
   enable: true
   level: info
 ````
-
+> [!NOTE]
+> Types marked as ``?`` mean are not required but optional
 
 ### Server
 | Field      | Data type                      | Explanation                                             | Example                  |
