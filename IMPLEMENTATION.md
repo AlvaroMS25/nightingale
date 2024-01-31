@@ -1,5 +1,11 @@
 # Nightingale client implementation
 
+> [!NOTE]
+> Types ending in `?` mean they are optional
+
+# WebSocket Gateway
+
+
 ## Opening a connection
 Before starting to work with the server, the client must open a WebSocket connection,
 this is done against the path `/ws`
@@ -21,10 +27,6 @@ This request only requires a single header:
 ``
 session: Integer. The session id of the session to resume, this is the id received in the Ready event
 ``
-
-# Gateway
-
----
 
 # Incoming Events
 Nightingale sends events to the clients via the WebSocket gateway, all events have the following
@@ -241,3 +243,59 @@ The track object has the following fields:
 | `source_url` | `String?` |
 | `title`      | `String?` |
 | `thumbnail`  | `String?` |
+
+# Outgoing Events
+Most interaction with Nightingale is done through the REST API, however, **voice state update** and
+**voice server update** events are forwarded using the gateway.
+
+To forward those events to Nightingale we will use the following opcodes and structures:
+
+- Voice state update (opcode: `update_voice_state`)
+
+| Field        | Data type               |
+|--------------|-------------------------|
+| `guild_id`   | `Integer?` or `String?` |
+| `user_id`    | `Integer` or `String`   |
+| `session_id` | `String`                |
+| `channel_id` | `Integer?` or `String?` |
+
+<details>
+<summary>Example Payload</summary>
+
+```json
+{
+  "op": "update_voice_state",
+  "data": {
+    "guild_id": <Guild_Id>,
+    "user_id": <User_id>,
+    "session_id": <Session_id>,
+    "channel_id": <Channel_id>
+  }
+}
+```
+</details>
+
+- Update voice server (opcode: `update_voice_server`)
+
+| Field      | Data type             |
+|------------|-----------------------|
+| `endpoint` | `String?`             |
+| `guild_id` | `Integer` or `String` |
+| `token`    | `String`              |
+
+<details>
+<summary>Example Payload</summary>
+
+```json
+{
+  "op": "update_voice_server",
+  "data": {
+    "endpoint": <Endpoint>,
+    "guild_id": <Guild_id>,
+    "token": <Token>,
+  }
+}
+```
+</details>
+
+# REST API
