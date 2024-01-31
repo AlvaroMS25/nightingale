@@ -77,13 +77,6 @@ logging: # Optional field
 
 `LoggingLevel` consists of 5 options: `error`, `warn`, `info`, `debug` and `trace`. Ordered from more to less critical.
 
-
-
-
-
-
-
-
 [Songbird]: https://github.com/serenity-rs/songbird
 [Lavalink]: https://github.com/lavalink-devs/Lavalink
 [yt-dlp]: https://github.com/yt-dlp/yt-dlp
