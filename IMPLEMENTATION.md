@@ -233,16 +233,27 @@ There are 3 different track events:
 
 The track object has the following fields:
 
-| Field        | Data type |
-|--------------|-----------|
-| `track`      | `String?` |
-| `artist`     | `String?` |
-| `album`      | `String?` |
-| `channel`    | `String?` |
-| `duration`   | `String?` |
-| `source_url` | `String?` |
-| `title`      | `String?` |
-| `thumbnail`  | `String?` |
+| Field        | Data type   |
+|--------------|-------------|
+| `track`      | `String?`   |
+| `artist`     | `String?`   |
+| `album`      | `String?`   |
+| `channel`    | `String?`   |
+| `duration`   | `Duration?` |
+| `source_url` | `String?`   |
+| `title`      | `String?`   |
+| `thumbnail`  | `String?`   |
+
+Where `Duration`:
+
+| Field   | Data type |
+|---------|-----------|
+| `secs`  | Integer   |
+| `nanos` | Integer   |
+
+> [!WARNING]
+> Total duration is: `secs + to_secs(nanos)`
+
 
 # Outgoing Events
 Most interaction with Nightingale is done through the REST API, however, **voice state update** and
