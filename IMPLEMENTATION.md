@@ -103,13 +103,13 @@ Update state types are the following have the following fields:
 
 - Connect Gateway (type: `connect_gateway`) and Reconnect Gateway (type: `reconnect_gateway`):
 
-| Field     | Data type  |
-|-----------|------------|
-| `channel` | `Integer?` |
-| `guild`   | `Integer`  |
-| `session` | `String`   |
-| `server`  | `String`   |
-| `ssrc`    | `Integer`  |
+| Field        | Data type  |
+|--------------|------------|
+| `channel_id` | `Integer?` |
+| `guild_id`   | `Integer`  |
+| `session_id` | `String`   |
+| `server`     | `String`   |
+| `ssrc`       | `Integer`  |
 
 <details>
 <summary>Example payload</summary>
@@ -120,9 +120,9 @@ Update state types are the following have the following fields:
   "data": {
     "type": "connect_gateway",
     "data": {
-      "channel": <Channel_id>,
-      "guild": <Guild_id>,
-      "session": <Session>,
+      "channel_id": <Channel_id>,
+      "guild_id": <Guild_id>,
+      "session_id": <Session>,
       "server": <Server>,
       "ssrc": <Ssrc>
     }
@@ -134,11 +134,11 @@ Update state types are the following have the following fields:
 
 - Disconnect Gateway (type: `disconnect_gateway`):
 
-| Field     | Data type  |
-|-----------|------------|
-| `channel` | `Integer?` |
-| `guild`   | `Integer`  |
-| `session` | `String`   |
+| Field        | Data type  |
+|--------------|------------|
+| `channel_id` | `Integer?` |
+| `guild_id`   | `Integer`  |
+| `session_id` | `String`   |
 
 <details>
 <summary>Example payload</summary>
@@ -149,9 +149,9 @@ Update state types are the following have the following fields:
   "data": {
     "type": "disconnect_gateway",
     "data": {
-      "channel": <Channel_id>,
-      "guild": <Guild_id>,
-      "session": <Session>
+      "channel_id": <Channel_id>,
+      "guild_id": <Guild_id>,
+      "session_id": <Session>
     }
   }
 }

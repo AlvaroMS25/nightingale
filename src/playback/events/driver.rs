@@ -28,21 +28,21 @@ impl EventHandler for DriverMetrics {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         let state = match ctx {
             EventContext::DriverConnect(d) => UpdateState::ConnectGateway(ConnectionData {
-                channel: d.channel_id.map(|c| c.0.get()),
-                guild: d.guild_id.0.get(),
-                session: d.session_id.to_string(),
+                channel_id: d.channel_id.map(|c| c.0.get()),
+                guild_id: d.guild_id.0.get(),
+                session_id: d.session_id.to_string(),
                 server: d.server.to_string(),
                 ssrc: d.ssrc
             }),
             EventContext::DriverDisconnect(d) => UpdateState::DisconnectGateway(DisconnectData {
-                channel: d.channel_id.map(|c| c.0.get()),
-                guild: d.guild_id.0.get(),
-                session: d.session_id.to_string()
+                channel_id: d.channel_id.map(|c| c.0.get()),
+                guild_id: d.guild_id.0.get(),
+                session_id: d.session_id.to_string()
             }),
             EventContext::DriverReconnect(d) => UpdateState::ReconnectGateway(ConnectionData {
-                channel: d.channel_id.map(|c| c.0.get()),
-                guild: d.guild_id.0.get(),
-                session: d.session_id.to_string(),
+                channel_id: d.channel_id.map(|c| c.0.get()),
+                guild_id: d.guild_id.0.get(),
+                session_id: d.session_id.to_string(),
                 server: d.server.to_string(),
                 ssrc: d.ssrc
             }),
