@@ -42,6 +42,10 @@ pub async fn play(
                 Err(e) => {
                     return Response::builder()
                         .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .header(
+                            axum::http::header::CONTENT_TYPE,
+                            super::super::APPLICATION_JSON
+                        )
                         .body(Body::from(format!(r#"{{"message": "{e}"}}"#)))
                         .unwrap();
                 }
@@ -53,11 +57,26 @@ pub async fn play(
         }
     };
 
+    let Ok(serialized) = serde_json::to_string(&metadata.track()) else {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                super::super::APPLICATION_JSON
+            )
+            .body(Body::from(r#"{"message": "Failed to serialize track"}"#))
+            .unwrap();
+    };
+
     let mut lock = session.write().await;
 
     let Some(call) = lock.playback.get_call(query.guild_id) else {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                super::super::APPLICATION_JSON
+            )
             .body(Body::from(NOT_CONNECTED))
             .unwrap();
     };
@@ -70,7 +89,11 @@ pub async fn play(
 
     Response::builder()
         .status(StatusCode::OK)
-        .body(Body::empty())
+        .header(
+            axum::http::header::CONTENT_TYPE,
+            super::super::APPLICATION_JSON
+        )
+        .body(Body::from(serialized))
         .unwrap()
 }
 

@@ -161,13 +161,44 @@ Update state types are the following have the following fields:
 ### Event
 Nightingale sends track related events under the opcode `event`.
 
+All events have the following structure:
+
+| Field   | Data type     | Explanation                     |
+|---------|---------------|---------------------------------|
+| `guild` | `Integer`     | The guild the event occurred on |
+| `event` | `EventObject` | The event object                |
+
+Where `EventObject` is:
+
+| Field  | Data type |
+|--------|-----------|
+| `type` | `String`  |
+| `data` | `object`  |
+
+<details>
+<summary>Example Payload</summary>
+
+````json
+{
+  "op": "event",
+  "data": {
+    "guild": <Guild Id>,
+    "event": {
+      "type": "track_start",
+      "data": <Track Object>
+    }
+  }
+}
+````
+</details>
+
 There are 3 different track events:
 
 - Track Start(type: `track_start`)
 
-| Field   | Data type |
-|---------|-----------|
-| `track` | `Track`   |
+| Field  | Data type |
+|--------|-----------|
+| `data` | `Track`   |
 
 <details>
 <summary>Example payload</summary>
@@ -176,8 +207,11 @@ There are 3 different track events:
 {
   "op": "event",
   "data": {
-    "type": "track_start",
-    "data": <Track object>
+    "guild": <Guild Id>,
+    "event": {
+      "type": "track_start",
+      "data": <Track Object>
+    }
   }
 }
 ```
@@ -197,10 +231,13 @@ There are 3 different track events:
 {
   "op": "event",
   "data": {
-    "type": "track_end",
-    "data": {
-      "stopped": false,
-      "track": <Track object>
+    "guild": <Guild Id>,
+    "event": {
+      "type": "track_end",
+      "data": {
+        "stopped": false,
+        "track": <Track object>
+      }
     }
   }
 }
@@ -221,10 +258,13 @@ There are 3 different track events:
 {
   "op": "event",
   "data": {
-    "type": "track_errored",
-    "data": {
-      "error": "Something failed",
-      "track": <Track object>
+    "guild": <Guild_Id>,
+    "event": {
+      "type": "track_errored",
+      "data": {
+        "error": "Something failed",
+        "track": <Track object>
+      }
     }
   }
 }
@@ -310,3 +350,80 @@ To forward those events to Nightingale we will use the following opcodes and str
 </details>
 
 # REST API
+Most interactions(such as managing playback) with Nightingale are done through the REST API.
+
+Before making any requests, you must connect to the gateway and receive the [Ready](#ready) event,
+because all requests need you to provide the session given on that payload.
+
+## Joining and Leaving voice channels.
+
+### Joining a voice channel
+To join a voice channel, a `put` http request must be done against `/api/v1/connect`,
+providing the following queries:
+
+| Query        | Data type | Explanation                                         |
+|--------------|-----------|-----------------------------------------------------|
+| `session`    | `Uuid`    | The session received in the [ready](#ready) payload |
+| `guild_id`   | `Integer` | The guild id to connect to                          |
+| `channel_id` | `Integer` | The channel id to connect to                        |
+
+If all queries are provided and valid, Nightingale will automatically respond with an `200 OK` status, but this
+does **not** mean the server is actually connected to a channel. Since joining a channel needs both *voice state*
+and *voice server* update payloads, the connection will be really established when the server receives those, and it will
+emit the `connect_gateway` event. Receiving it means the server is **actually** connected to the voice channel.
+
+### Leaving a voice channel
+To leave a voice channel, a `delete` http request must be done against the path `/api/v1/disconnect`,
+providing the following queries:
+
+| Query      | Data type | Explanation                                         |
+|------------|-----------|-----------------------------------------------------|
+| `session`  | `Uuid`    | The session received in the [ready](#ready) payload |
+| `guild_id` | `Integer` | The guild id to disconnect from                     |
+
+Receiving a `200 OK` response **does** mean the server disconnected from the channel, however, the `disconnect_gateway`
+event will still be fired.
+
+## Playback
+### Playing tracks
+As of now, Nightingale supports playing from either a link from a source supported by [yt-dlp] or providing a file in bytes
+to play from, to do this, a `post` request must be done agains the path `/api/v1/playback/play`,
+providing the following queries:
+
+| Query      | Data type | Explanation                                         |
+|------------|-----------|-----------------------------------------------------|
+| `session`  | `Uuid`    | The session received in the [ready](#ready) payload |
+| `guild_id` | `Integer` | The guild to play on                                |
+
+And a json body with the following fields:
+
+| Field        | Data type    | Explanation                                                                          |
+|--------------|--------------|--------------------------------------------------------------------------------------|
+| `force_play` | `Boolean`    | Whether to force play the track, if set to `true`, it will start playing immediately |
+| `source`     | `PlaySource` | The source of the track                                                              |
+
+`PlaySource` has the following fields:
+
+| Field  | Options                                                               | Explanation                 |
+|--------|-----------------------------------------------------------------------|-----------------------------|
+| `type` | `"link"` or `"bytes"`                                                 | The type of source provided |
+| `data` | `ByteArray` if `type` is `"bytes"` and `String` if `type` is `"link"` | The actual source           |
+
+A `Track` object with the track requested is returned from the server.
+
+### Pausing and resuming playback
+To pause or resume playback, a `patch` request against the paths 
+`/api/v1/playback/pause` and `/api/v1/playback/resume` respectively must be done,
+providing the following queries:
+
+| Query      | Data type | Explanation                                         |
+|------------|-----------|-----------------------------------------------------|
+| `session`  | `Uuid`    | The session received in the [ready](#ready) payload |
+| `guild_id` | `Integer` | The guild id to disconnect from                     |
+
+### Modifying playback volume
+To modify the volume, a `patch` request must be done against the path `/api/v1/playback/volume/<new_volume>`
+where `<new_volume>` is the new volume to set as a `float`. Please take into account that a value of 1.0 means a 100% volume, so be
+careful with the values used.
+
+This endpoint requires the same queries as the [leave voice](#leaving-a-voice-channel) one.
