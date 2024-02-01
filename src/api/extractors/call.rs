@@ -45,6 +45,10 @@ impl FromRequestParts<State> for CallExtractor {
             return Err(
                 Response::builder()
                     .status(StatusCode::BAD_REQUEST)
+                    .header(
+                        axum::http::header::CONTENT_TYPE,
+                        super::super::APPLICATION_JSON
+                    )
                     .body(Body::from(NOT_CONNECTED))
                     .unwrap()
             );
