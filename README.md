@@ -21,7 +21,7 @@ needs better.
 - [ ] Playback skip route
 - [ ] Player information route
 - [ ] Clear queue route
-- [ ] System information such as CPU and Memory usage
+- [x] System information such as CPU and Memory usage
 - [ ] Prometheus Metrics
 - [ ] Allow writing logs to file
 - [ ] Routes for searching from different sources
