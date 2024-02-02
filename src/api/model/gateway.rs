@@ -37,7 +37,7 @@ pub enum Outgoing {
     },
     Ready(model::ready::Ready),
     Event {
-        guild: u64,
+        guild_id: u64,
         event: OutgoingEvent
     },
     UpdateState(super::connection::UpdateState)

@@ -163,10 +163,10 @@ Nightingale sends track related events under the opcode `event`.
 
 All events have the following structure:
 
-| Field   | Data type     | Explanation                     |
-|---------|---------------|---------------------------------|
-| `guild` | `Integer`     | The guild the event occurred on |
-| `event` | `EventObject` | The event object                |
+| Field      | Data type     | Explanation                     |
+|------------|---------------|---------------------------------|
+| `guild_id` | `Integer`     | The guild the event occurred on |
+| `event`    | `EventObject` | The event object                |
 
 Where `EventObject` is:
 
@@ -182,7 +182,7 @@ Where `EventObject` is:
 {
   "op": "event",
   "data": {
-    "guild": <Guild Id>,
+    "guild_id": <Guild Id>,
     "event": {
       "type": "track_start",
       "data": <Track Object>
@@ -207,7 +207,7 @@ There are 3 different track events:
 {
   "op": "event",
   "data": {
-    "guild": <Guild Id>,
+    "guild_id": <Guild Id>,
     "event": {
       "type": "track_start",
       "data": <Track Object>
@@ -231,7 +231,7 @@ There are 3 different track events:
 {
   "op": "event",
   "data": {
-    "guild": <Guild Id>,
+    "guild_id": <Guild Id>,
     "event": {
       "type": "track_end",
       "data": {
@@ -258,7 +258,7 @@ There are 3 different track events:
 {
   "op": "event",
   "data": {
-    "guild": <Guild_Id>,
+    "guild_id": <Guild_Id>,
     "event": {
       "type": "track_errored",
       "data": {
