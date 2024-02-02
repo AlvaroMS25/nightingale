@@ -51,7 +51,7 @@ impl EventHandler for TrackMetrics {
         };
 
         let event = Outgoing::Event {
-            guild: metadata.guild,
+            guild_id: metadata.guild,
             event
         };
 
