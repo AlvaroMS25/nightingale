@@ -18,7 +18,7 @@ pub mod metadata;
 pub mod events;
 
 pub struct Playback {
-    calls: DashMap<GuildId, Arc<RwLock<Call>>>,
+    pub calls: DashMap<GuildId, Arc<RwLock<Call>>>,
     pub sharder: Sharder,
     pub receiver: Option<Receiver>,
     pub queue: Queue,
