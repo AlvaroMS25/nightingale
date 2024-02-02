@@ -1,6 +1,7 @@
 use std::ops::Deref;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use dashmap::DashMap;
+use sysinfo::{Pid, System};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 use crate::api::session::Session;
@@ -24,14 +25,18 @@ impl State {
 
 pub struct Inner {
     pub http: reqwest::Client,
-    pub instances: DashMap<Uuid, Arc<RwLock<Session>>>
+    pub instances: DashMap<Uuid, Arc<RwLock<Session>>>,
+    pub system: Mutex<System>,
+    pub pid: Pid
 }
 
 impl Inner {
     fn new() -> Self {
         Self {
             http: reqwest::Client::new(),
-            instances: Default::default()
+            instances: Default::default(),
+            system: Mutex::new(System::new_all()),
+            pid: Pid::from_u32(std::process::id())
         }
     }
 

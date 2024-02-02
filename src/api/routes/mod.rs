@@ -6,6 +6,7 @@ use crate::api::state::State;
 mod playback;
 mod gateway;
 mod prometheus;
+mod info;
 
 pub fn get_router() -> Router<State> {
     Router::new()
@@ -17,5 +18,6 @@ pub fn get_router() -> Router<State> {
             .route("/resume", patch(playback::resume))
             .route("/volume/:vol", patch(playback::volume))
         )
+        .route("/info", get(info::info))
         .route("/prometheus", get(prometheus::prometheus_metrics))
 }

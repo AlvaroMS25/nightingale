@@ -27,6 +27,7 @@ reqwest = "0.11.23"
 typemap_rev = "0.3"
 ipnet = { version = "2.9.0", features = ["serde"]}
 prometheus-client = "0.22"
+sysinfo = "0.30"
 
 [dependencies.symphonia]
 version = "0.5.3"
