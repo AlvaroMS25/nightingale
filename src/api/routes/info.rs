@@ -3,10 +3,29 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum::response::IntoResponse;
 use sysinfo::ProcessRefreshKind;
+use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::info::{CoreInfo, CpuInfo, Info, MemoryInfo, PlaybackInfo, SystemInfo};
+use crate::api::session::Session;
 use crate::api::state::State;
 
-pub async fn info(AxumState(state): AxumState<State>) -> Result<impl IntoResponse, impl IntoResponse>{
+async fn players_for(session: &Session) -> (u64, u64) {
+    let mut playing = 0;
+
+    for c in session.playback.calls.iter() {
+        let call = c.read().await;
+
+        if call.queue().current().is_some() {
+            playing += 1;
+        }
+    }
+
+    (session.playback.calls.len() as u64, playing)
+}
+
+pub async fn info(
+    AxumState(state): AxumState<State>,
+    session: Option<SessionExtractor>
+) -> Result<impl IntoResponse, impl IntoResponse>{
     let state_clone = state.clone();
     let handle = tokio::task::spawn_blocking(move || {
         let mut lock = state_clone.system.lock().unwrap_or_else(|l| l.into_inner());
@@ -52,23 +71,23 @@ pub async fn info(AxumState(state): AxumState<State>) -> Result<impl IntoRespons
     let mut players = 0;
     let mut playing = 0;
 
-    for s in state.instances.iter() {
-        let session = s.value().read().await;
-        players += session.playback.calls.len();
+    if let Some(SessionExtractor(s)) = session {
+        let session = s.read().await;
 
-        for c in session.playback.calls.iter() {
-            let call = c.read().await;
-
-            if let Some(_) = call.queue().current() {
-                playing += 1;
-            }
+        (players, playing) = players_for(&session).await;
+    } else {
+        for s in state.instances.iter() {
+            let session = s.value().read().await;
+            let p = players_for(&session).await;
+            players += p.0;
+            playing += p.1;
         }
     }
 
     Ok(Json(Info {
         system: info,
         playback: PlaybackInfo {
-            players: players as u64,
+            players,
             playing
         },
     }))
