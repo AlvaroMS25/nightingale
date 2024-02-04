@@ -7,6 +7,7 @@ mod playback;
 mod gateway;
 mod prometheus;
 mod info;
+mod search;
 
 pub fn get_router() -> Router<State> {
     Router::new()
@@ -18,6 +19,7 @@ pub fn get_router() -> Router<State> {
             .route("/resume", patch(playback::resume))
             .route("/volume/:vol", patch(playback::volume))
         )
+        .nest("/search", search::get_router())
         .route("/info", get(info::info))
         .route("/prometheus", get(prometheus::prometheus_metrics))
 }

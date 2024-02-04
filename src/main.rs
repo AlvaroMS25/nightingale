@@ -10,6 +10,8 @@ mod error;
 mod channel;
 mod abort;
 mod metrics;
+mod search;
+mod ext;
 
 const NIGHTINGALE: &str = r#"
  _   _ _       _     _   _                   _
