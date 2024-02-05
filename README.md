@@ -24,7 +24,7 @@ needs better.
 - [x] System information such as CPU and Memory usage
 - [ ] Prometheus Metrics
 - [ ] Allow writing logs to file
-- [ ] Routes for searching from different sources
+- [x] Routes for searching from different sources (only youtube supported right now)
 - [ ] Allow adding playlists directly
 
 ## Usage
