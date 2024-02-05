@@ -116,7 +116,8 @@ impl WebSocketHandler<'_> {
             tokio::select! {
                 biased;
                 _ = &mut abort => {
-                    todo!("cleanup")
+                    let _ = self.socket.close().await;
+                    return;
                 },
                 Some(msg) = self.receiver.next() => {
                     self.send(msg).await;
