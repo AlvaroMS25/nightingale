@@ -6,9 +6,7 @@ use std::str::FromStr;
 use std::time::Duration;
 use const_format::concatcp;
 use reqwest::Client;
-use serde::Deserialize;
 use serde_json::{json, Value};
-use crate::ext::JsonValueExt;
 use crate::search::youtube::playlist::YoutubePlaylist;
 use crate::search::youtube::track::YoutubeTrack;
 

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use std::time::Duration;
 use songbird::{Call, CoreEvent, Event, EventHandler, TrackEvent};
-use tokio::sync::RwLock;
 use driver::DriverMetrics;
 use periodic::PeriodicMetrics;
 use track::TrackMetrics;

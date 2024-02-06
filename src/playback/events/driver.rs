@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use songbird::{Event, EventContext, EventHandler};
-use tokio::sync::RwLock;
 use crate::api::model::{connection::{ConnectionData, DisconnectData, UpdateState}, gateway::Outgoing};
 use crate::api::session::Session;
 use crate::channel::Sender;

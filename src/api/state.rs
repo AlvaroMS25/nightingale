@@ -2,7 +2,6 @@ use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use dashmap::DashMap;
 use sysinfo::{Pid, System};
-use tokio::sync::RwLock;
 use uuid::Uuid;
 use crate::api::session::Session;
 use crate::search::Search;

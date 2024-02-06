@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use songbird::{Event, EventContext, EventHandler};
 use songbird::tracks::PlayMode;
-use tokio::sync::RwLock;
 use crate::api::model::gateway::{Outgoing, OutgoingEvent};
 use crate::api::session::Session;
 use crate::channel::Sender;
