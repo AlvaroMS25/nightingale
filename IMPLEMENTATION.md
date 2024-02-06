@@ -66,7 +66,13 @@ this event corresponds to the `ready` opcode. The structure of this event is the
 ### Forward
 Nightingale forwards payloads to the client that should be forwarded to discord gateway,
 these payloads are used to connect/disconnect to voice channels and to update microphone activity of
-the bot. These messages have the `forward` opcode, and the part to be forwarded is under the `data` field.
+the bot. These messages have the `forward` opcode, the structure is the following:
+
+| Field     | Data type | Explanation                               |
+|-----------|-----------|-------------------------------------------|
+| `shard`   | `Integer` | The shard that should forward the payload |
+| `payload` | `Object`  | The payload that should be forwarder      |
+
 
 <details>
 <summary>Example forward payload</summary>
@@ -75,12 +81,15 @@ the bot. These messages have the `forward` opcode, and the part to be forwarded 
 {
   "op": "forward",
   "data": {
-    "op": 4,
-    "d": {
-      "channel_id": <Channel_id>,
-      "guild_id": <Guild_id>,
-      "self_deaf": true,
-      "self_mute": false
+    "shard": 1,
+    "payload": {
+      "op": 4,
+      "d": {
+        "channel_id": <Channel_id>,
+        "guild_id": <Guild_id>,
+        "self_deaf": true,
+        "self_mute": false
+      }
     }
   }
 }
@@ -273,26 +282,19 @@ There are 3 different track events:
 
 The track object has the following fields:
 
-| Field        | Data type   |
-|--------------|-------------|
-| `track`      | `String?`   |
-| `artist`     | `String?`   |
-| `album`      | `String?`   |
-| `channel`    | `String?`   |
-| `duration`   | `Duration?` |
-| `source_url` | `String?`   |
-| `title`      | `String?`   |
-| `thumbnail`  | `String?`   |
-
-Where `Duration`:
-
-| Field   | Data type |
-|---------|-----------|
-| `secs`  | Integer   |
-| `nanos` | Integer   |
+| Field        | Data type  |
+|--------------|------------|
+| `track`      | `String?`  |
+| `artist`     | `String?`  |
+| `album`      | `String?`  |
+| `channel`    | `String?`  |
+| `duration`   | `Integer?` |
+| `source_url` | `String?`  |
+| `title`      | `String?`  |
+| `thumbnail`  | `String?`  |
 
 > [!WARNING]
-> Total duration is: `secs + to_secs(nanos)`
+> `duration` field is in milliseconds
 
 
 # Outgoing Events

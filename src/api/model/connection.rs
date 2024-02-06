@@ -1,3 +1,5 @@
+use std::num::NonZeroU64;
+
 #[non_exhaustive]
 #[derive(serde::Serialize, Debug)]
 #[serde(tag = "type", content = "data")]
@@ -10,8 +12,8 @@ pub enum UpdateState {
 
 #[derive(serde::Serialize, Debug)]
 pub struct ConnectionData {
-    pub channel_id: Option<u64>,
-    pub guild_id: u64,
+    pub channel_id: Option<NonZeroU64>,
+    pub guild_id: NonZeroU64,
     pub session_id: String,
     pub server: String,
     pub ssrc: u32
@@ -19,7 +21,7 @@ pub struct ConnectionData {
 
 #[derive(serde::Serialize, Debug)]
 pub struct DisconnectData {
-    pub channel_id: Option<u64>,
-    pub guild_id: u64,
+    pub channel_id: Option<NonZeroU64>,
+    pub guild_id: NonZeroU64,
     pub session_id: String
 }
