@@ -8,7 +8,7 @@ pub struct Track {
     pub artist: Option<String>,
     pub album: Option<String>,
     pub channel: Option<String>,
-    pub duration: Option<Duration>,
+    pub duration: Option<u128>,
     pub source_url: Option<String>,
     pub title: Option<String>,
     pub thumbnail: Option<String>,
@@ -21,7 +21,7 @@ impl From<&AuxMetadata> for Track {
             artist: value.artist.clone(),
             album: value.album.clone(),
             channel: value.channel.clone(),
-            duration: value.duration.clone(),
+            duration: value.duration.map(|d| d.as_millis()),
             source_url: value.source_url.clone(),
             title: value.title.clone(),
             thumbnail: value.thumbnail.clone()
