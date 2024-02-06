@@ -7,7 +7,7 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use songbird::input::{AuxMetadata, Compose, Input, YoutubeDl};
 use tracing::info;
-use crate::api::extractors::call::CallExtractor;
+use crate::api::extractors::player::PlayerExtractor;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::play::{PlayOptions, PlaySource};
 use crate::api::state::State;
@@ -68,9 +68,7 @@ pub async fn play(
             .unwrap();
     };
 
-    let mut lock = session.write().await;
-
-    let Some(call) = lock.playback.get_call(query.guild_id) else {
+    let Some(player) = session.playback.get_player(query.guild_id) else {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .header(
@@ -81,11 +79,7 @@ pub async fn play(
             .unwrap();
     };
 
-    let handle = call.write().await.enqueue_input(source).await;
-
-    handle.typemap().write().await.insert::<TrackMetadata>(metadata);
-
-    lock.playback.queue.for_guild(query.guild_id.get()).push(handle);
+    player.write().await.enqueue(source, metadata).await;
 
     Response::builder()
         .status(StatusCode::OK)
@@ -97,8 +91,8 @@ pub async fn play(
         .unwrap()
 }
 
-pub async fn pause(CallExtractor(call): CallExtractor) -> impl IntoResponse {
-    let _ = call.read().await.queue().pause();
+pub async fn pause(PlayerExtractor(player): PlayerExtractor) -> impl IntoResponse {
+    let _ = player.read().await.pause();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -106,8 +100,8 @@ pub async fn pause(CallExtractor(call): CallExtractor) -> impl IntoResponse {
         .unwrap()
 }
 
-pub async fn resume(CallExtractor(call): CallExtractor) -> impl IntoResponse {
-    let _ = call.read().await.queue().resume();
+pub async fn resume(PlayerExtractor(player): PlayerExtractor) -> impl IntoResponse {
+    let _ = player.read().await.resume();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -116,14 +110,10 @@ pub async fn resume(CallExtractor(call): CallExtractor) -> impl IntoResponse {
 }
 
 pub async fn volume(
-    CallExtractor(call): CallExtractor,
-    Path(volume): Path<f32>
+    PlayerExtractor(player): PlayerExtractor,
+    Path(volume): Path<u8>
 ) -> impl IntoResponse {
-    call.read().await.queue().modify_queue(|q| {
-        for item in q.iter() {
-            let _ = item.set_volume(volume);
-        }
-    });
+    player.write().await.set_volume(volume);
 
     Response::builder()
         .status(StatusCode::OK)

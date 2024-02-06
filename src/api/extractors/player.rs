@@ -6,18 +6,18 @@ use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::response::Response;
 use serde::Deserialize;
-use songbird::Call;
 use tokio::sync::RwLock;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::state::State;
+use crate::playback::player::Player;
 
 const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 pub const MISSING_GUILD_ID: &str = r#"{"message": "Missing guild ID"}"#;
 
-pub struct CallExtractor(pub Arc<RwLock<Call>>);
+pub struct PlayerExtractor(pub Arc<RwLock<Player>>);
 
 #[async_trait::async_trait]
-impl FromRequestParts<State> for CallExtractor {
+impl FromRequestParts<State> for PlayerExtractor {
     type Rejection = Response;
 
     async fn from_request_parts(parts: &mut Parts, state: &State) -> Result<Self, Self::Rejection> {
@@ -39,9 +39,7 @@ impl FromRequestParts<State> for CallExtractor {
                     .unwrap()
             })?;
 
-        let lock = session.read().await;
-
-        let Some(call) = lock.playback.get_call(query.guild_id) else {
+        let Some(player) = session.playback.get_player(query.guild_id) else {
             return Err(
                 Response::builder()
                     .status(StatusCode::BAD_REQUEST)
@@ -54,6 +52,6 @@ impl FromRequestParts<State> for CallExtractor {
             );
         };
 
-        Ok(CallExtractor(call))
+        Ok(PlayerExtractor(player))
     }
 }

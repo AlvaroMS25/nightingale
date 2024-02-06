@@ -13,7 +13,7 @@ use crate::api::state::State;
 pub const MISSING_SESSION_ID: &str = r#"{"message": "Missing session ID"}"#;
 pub const SESSION_NOT_PRESENT: &str = r#"{"message": "Session not present"}"#;
 
-pub struct SessionExtractor(pub Arc<RwLock<Session>>);
+pub struct SessionExtractor(pub Arc<Session>);
 
 #[async_trait::async_trait]
 impl FromRequestParts<State> for SessionExtractor {

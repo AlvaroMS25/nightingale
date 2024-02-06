@@ -1,12 +1,13 @@
 use std::num::NonZeroU64;
 use std::time::Duration;
+use parking_lot::Mutex;
 use uuid::Uuid;
 use crate::playback::Playback;
 
 pub struct Session {
     pub id: Uuid,
     pub playback: Playback,
-    pub options: SessionOptions
+    pub options: Mutex<SessionOptions>
 }
 
 pub struct SessionOptions {
@@ -19,10 +20,10 @@ impl Session {
         Self {
             id,
             playback: Playback::new(shards, user_id),
-            options: SessionOptions {
+            options: Mutex::new(SessionOptions {
                 enable_resume: true,
                 timeout: Duration::from_secs(60)
-            }
+            })
         }
     }
 }

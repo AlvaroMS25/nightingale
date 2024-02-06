@@ -8,13 +8,13 @@ use crate::channel::Sender;
 #[derive(Clone)]
 pub struct DriverMetrics {
     #[allow(unused)]
-    session: Arc<RwLock<Session>>,
+    session: Arc<Session>,
     sender: Sender
 }
 
 impl DriverMetrics {
-    pub async fn new(session: Arc<RwLock<Session>>) -> Self {
-        let sender = session.read().await.playback.sharder.sender.clone();
+    pub async fn new(session: Arc<Session>) -> Self {
+        let sender = session.playback.sharder.sender.clone();
 
         Self {
             session,

@@ -13,7 +13,7 @@ mod driver;
 
 #[async_trait::async_trait]
 pub trait EventsExt {
-    async fn register_events(&self, session: Arc<RwLock<Session>>);
+    async fn register_events(&mut self, session: Arc<Session>);
 }
 
 fn chain_events<I, T, H>(call: &mut Call, events: I, handler: H)
@@ -31,17 +31,15 @@ where
 }
 
 #[async_trait::async_trait]
-impl EventsExt for Arc<RwLock<Call>> {
-    async fn register_events(&self, session: Arc<RwLock<Session>>) {
-        let mut call = self.write().await;
-        
-        call.add_global_event(
+impl EventsExt for Call {
+    async fn register_events(&mut self, session: Arc<Session>) {
+        self.add_global_event(
             Event::Periodic(Duration::from_secs(5), None),
             PeriodicMetrics::new(Arc::clone(&session)).await
         );
 
         chain_events(
-            &mut call,
+            self,
             [
                 TrackEvent::Play,
                 TrackEvent::End,
@@ -51,7 +49,7 @@ impl EventsExt for Arc<RwLock<Call>> {
         );
 
         chain_events(
-            &mut call,
+            self,
             [
                 CoreEvent::DriverConnect,
                 CoreEvent::DriverDisconnect,
@@ -61,7 +59,7 @@ impl EventsExt for Arc<RwLock<Call>> {
         );
 
         chain_events(
-            &mut call,
+            self,
             [
                 CoreEvent::DriverConnect,
                 CoreEvent::DriverDisconnect,

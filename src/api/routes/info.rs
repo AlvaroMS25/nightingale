@@ -11,15 +11,15 @@ use crate::api::state::State;
 async fn players_for(session: &Session) -> (u64, u64) {
     let mut playing = 0;
 
-    for c in session.playback.calls.iter() {
-        let call = c.read().await;
+    for c in session.playback.players.iter() {
+        let player = c.read().await;
 
-        if call.queue().current().is_some() {
+        if player.call.queue().current().is_some() {
             playing += 1;
         }
     }
 
-    (session.playback.calls.len() as u64, playing)
+    (session.playback.players.len() as u64, playing)
 }
 
 pub async fn info(
@@ -72,13 +72,10 @@ pub async fn info(
     let mut playing = 0;
 
     if let Some(SessionExtractor(s)) = session {
-        let session = s.read().await;
-
-        (players, playing) = players_for(&session).await;
+        (players, playing) = players_for(&s).await;
     } else {
         for s in state.instances.iter() {
-            let session = s.value().read().await;
-            let p = players_for(&session).await;
+            let p = players_for(&s).await;
             players += p.0;
             playing += p.1;
         }

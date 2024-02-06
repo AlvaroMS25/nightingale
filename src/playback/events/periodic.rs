@@ -6,14 +6,14 @@ use crate::channel::Sender;
 
 pub struct PeriodicMetrics {
     #[allow(unused)]
-    session: Arc<RwLock<Session>>,
+    session: Arc<Session>,
     #[allow(unused)]
     sender: Sender
 }
 
 impl PeriodicMetrics {
-    pub async fn new(session: Arc<RwLock<Session>>) -> Self {
-        let sender = session.read().await.playback.sharder.sender.clone();
+    pub async fn new(session: Arc<Session>) -> Self {
+        let sender = session.playback.sharder.sender.clone();
 
         Self {
             session,

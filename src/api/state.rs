@@ -26,7 +26,7 @@ impl State {
 
 pub struct Inner {
     pub http: reqwest::Client,
-    pub instances: DashMap<Uuid, Arc<RwLock<Session>>>,
+    pub instances: DashMap<Uuid, Arc<Session>>,
     pub system: Mutex<System>,
     pub pid: Pid,
     pub search: Search

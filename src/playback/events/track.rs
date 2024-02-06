@@ -10,13 +10,13 @@ use crate::playback::metadata::TrackMetadata;
 #[derive(Clone)]
 pub struct TrackMetrics {
     #[allow(unused)]
-    session: Arc<RwLock<Session>>,
+    session: Arc<Session>,
     sender: Sender
 }
 
 impl TrackMetrics {
-    pub async fn new(session: Arc<RwLock<Session>>) -> Self {
-        let sender = session.read().await.playback.sharder.sender.clone();
+    pub async fn new(session: Arc<Session>) -> Self {
+        let sender = session.playback.sharder.sender.clone();
 
         Self {
             session,

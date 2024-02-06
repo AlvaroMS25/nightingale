@@ -38,7 +38,7 @@ pub async fn connect(
 ) -> impl IntoResponse {
     let id = state.generate_uuid();
 
-    state.instances.insert(id, Arc::new(RwLock::new(Session::new(id, options.shards, options.user_id))));
+    state.instances.insert(id, Arc::new(Session::new(id, options.shards, options.user_id)));
 
     ws.on_upgrade(move |ws| initialize_websocket(state, ws, id, false))
 }
@@ -48,13 +48,13 @@ pub async fn resume(
     ws: WebSocketUpgrade,
     SessionExtractor(session): SessionExtractor
 ) -> impl IntoResponse {
-    if session.read().await.playback.receiver.is_none() {
+    if session.playback.receiver.lock().is_none() {
       Response::builder()
           .status(StatusCode::CONFLICT)
           .body(Body::from(r#"{"message": "session taken"}"#))
           .unwrap()
     } else {
-        let session_id = session.read().await.id;
+        let session_id = session.id;
         ws.on_upgrade(move |ws| initialize_websocket(state, ws, session_id, true))
     }
 }
@@ -63,7 +63,7 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
     let session = state.instances.get(&id).map(|s| Arc::clone(s.value())).unwrap();
 
     tokio::spawn(async move {
-        let mut receiver = session.write().await.playback.receiver.take().unwrap();
+        let mut receiver = session.playback.receiver.lock().take().unwrap();
 
         WebSocketHandler {
             id,
@@ -76,20 +76,19 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
 
         info!("Websocket connection finished");
 
-        let mut lock = session.write().await;
-        lock.playback.receiver = Some(receiver);
+        *session.playback.receiver.lock() = Some(receiver);
 
-        if !lock.options.enable_resume {
-            drop(lock);
+        let (enable_resume, timeout) = {
+            let lock = session.options.lock();
+            (lock.enable_resume, lock.timeout)
+        };
+
+        if !enable_resume {
             state.instances.remove(&id);
         } else {
-            let timeout = lock.options.timeout;
-            drop(lock);
-
             tokio::time::sleep(timeout).await;
 
-            let lock = session.read().await;
-            if lock.playback.receiver.is_some() {
+            if session.playback.receiver.lock().is_some() {
                 state.instances.remove(&id);
             }
         }
@@ -102,7 +101,7 @@ struct WebSocketHandler<'a> {
     #[allow(unused)]
     state: State,
     receiver: &'a mut Receiver,
-    session: Arc<RwLock<Session>>,
+    session: Arc<Session>,
     abort: Abort
 }
 
@@ -155,7 +154,7 @@ impl WebSocketHandler<'_> {
         debug!("Received message: {msg:?}");
         if msg.is_voice_event() {
             debug!("Received a voice event, forwarding to songbird");
-            self.session.read().await.playback.process_event(msg.into()).await;
+            self.session.playback.process_event(msg.into()).await;
             debug!("Event forwarded");
             return;
         }

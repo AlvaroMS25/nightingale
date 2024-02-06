@@ -20,15 +20,14 @@ pub async fn connect(
 ) -> impl IntoResponse {
     info!("Incoming connection request");
     tokio::spawn(async move {
-        let lock = session.read().await;
         
-        match lock.playback.join(query.guild_id, query.channel_id, Arc::clone(&session)).await {
+        match session.playback.join(query.guild_id, query.channel_id, Arc::clone(&session)).await {
             Ok(_) => {
                 info!("Connecting voice on guild {} and channel id {}", query.guild_id, query.channel_id);
             },
             Err(error) => {
                 warn!("An error occurred when connecting voice on guild {}, error: {}", query.guild_id, error);
-                let _ = lock.playback.leave(query.guild_id).await;
+                let _ = session.playback.leave(query.guild_id).await;
             }
         }
     });
@@ -49,7 +48,7 @@ pub async fn disconnect(
     SessionExtractor(session): SessionExtractor,
     Query(query): Query<DisconnectQuery>
 ) -> impl IntoResponse {
-    let _ = session.write().await.playback.leave(query.guild_id).await;
+    let _ = session.playback.leave(query.guild_id).await;
 
     Response::builder()
         .status(StatusCode::OK)
