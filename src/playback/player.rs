@@ -9,6 +9,7 @@ pub struct Player {
     pub queue: Vec<TrackHandle>,
     pub current: Option<TrackHandle>,
     pub volume: u8,
+    pub paused: bool
 }
 
 impl Player {
@@ -17,7 +18,8 @@ impl Player {
             call,
             queue: Vec::new(),
             current: None,
-            volume: 100
+            volume: 100,
+            paused: false
         }
     }
 
@@ -37,12 +39,14 @@ impl Player {
         self.call.leave().await
     }
 
-    pub fn pause(&self) {
+    pub fn pause(&mut self) {
         let _ = self.call.queue().pause();
+        self.paused = true;
     }
 
-    pub fn resume(&self) {
+    pub fn resume(&mut self) {
         let _ = self.call.queue().resume();
+        self.paused = false;
     }
 
     pub fn set_volume(&mut self, volume: u8) {
