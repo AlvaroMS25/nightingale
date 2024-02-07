@@ -8,6 +8,7 @@ mod gateway;
 mod prometheus;
 mod info;
 mod search;
+mod player;
 
 pub fn get_router() -> Router<State> {
     Router::new()

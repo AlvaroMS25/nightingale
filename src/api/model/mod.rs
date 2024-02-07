@@ -5,3 +5,4 @@ pub mod gateway;
 pub mod track;
 pub mod voice;
 pub mod info;
+pub mod player;
