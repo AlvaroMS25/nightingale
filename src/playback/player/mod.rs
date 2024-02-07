@@ -33,10 +33,6 @@ impl Player {
         this
     }
 
-    async fn a(&self) {
-        self.call.enqueue(todo!());
-    }
-
     pub async fn enqueue<T: Into<Input>>(&mut self, item: T, meta: TrackMetadata) {
         let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume((self.volume / 100) as _);
         let handle = self.call.play(track.pause());
@@ -50,12 +46,12 @@ impl Player {
     }
 
     pub fn pause(&mut self) {
-        let _ = self.queue.pause();
+        self.queue.pause();
         self.paused = true;
     }
 
     pub fn resume(&mut self) {
-        let _ = self.queue.resume();
+        self.queue.resume();
         self.paused = false;
     }
 

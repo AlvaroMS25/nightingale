@@ -74,7 +74,8 @@ impl Queue {
 
     pub fn play_load_next(&mut self) {
         if self.should_play() {
-            // if should play is true here, we're empty of songs.
+            // if true here, we're empty of songs.
+            info!("Queue empty");
             return;
         }
 
@@ -82,7 +83,7 @@ impl Queue {
             warn!("Failed to play queued track: {e}");
 
             if !self.load_next() {
-                info!("Queue empty");
+                warn!("Queue finished after having an error playing a track");
                 return;
             }
         }
@@ -101,6 +102,15 @@ impl Queue {
 
         } else {
             self.rest.push_back(track);
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.current.take().map(|t| t.stop());
+        self.next.take().map(|t| t.stop());
+
+        for t in self.rest.drain(..) {
+            let _ = t.stop();
         }
     }
 }
