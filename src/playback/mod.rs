@@ -5,7 +5,7 @@ use songbird::id::{ChannelId, GuildId, UserId};
 use songbird::Call;
 use songbird::error::JoinResult;
 use songbird::shards::{GenericSharder, Shard};
-use tokio::sync::RwLock;
+use tokio::sync::Mutex as AsyncMutex;
 use events::EventsExt;
 use crate::api::model::voice::VoiceEvent;
 use crate::api::session::Session;
@@ -19,7 +19,7 @@ pub mod events;
 pub mod player;
 
 pub struct Playback {
-    pub players: DashMap<GuildId, Arc<RwLock<Player>>>,
+    pub players: DashMap<GuildId, Arc<AsyncMutex<Player>>>,
     pub sharder: Sharder,
     pub receiver: Mutex<Option<Receiver>>,
     pub user_id: UserId
@@ -42,7 +42,7 @@ impl Playback {
         }
     }
 
-    pub fn get_player(&self, guild: impl Into<GuildId>) -> Option<Arc<RwLock<Player>>> {
+    pub fn get_player(&self, guild: impl Into<GuildId>) -> Option<Arc<AsyncMutex<Player>>> {
         self.players.get(&guild.into())
             .map(|v| Arc::clone(v.value()))
     }
@@ -52,7 +52,7 @@ impl Playback {
         guild: G, 
         channel_id: C, 
         s: Arc<Session>
-    ) -> JoinResult<Arc<RwLock<Player>>>
+    ) -> JoinResult<Arc<AsyncMutex<Player>>>
     where
         G: Into<GuildId>,
         C: Into<ChannelId>
@@ -73,14 +73,14 @@ impl Playback {
             );
             call.register_events(s).await;
 
-            let player = Arc::new(RwLock::new(Player::new(call)));
+            let player = Arc::new(AsyncMutex::new(Player::new(call)));
 
             self.players.insert(guild, Arc::clone(&player));
             player
         };
 
         let stage_1 = {
-            let mut handler = player.write().await;
+            let mut handler = player.lock().await;
             handler.call.join(channel_id).await
         };
 
@@ -95,7 +95,7 @@ impl Playback {
             return Ok(())
         };
 
-        let mut write = call.write().await;
+        let mut write = call.lock().await;
         write.destroy().await
     }
 
@@ -107,7 +107,7 @@ impl Playback {
                 };
 
                 if let Some(endpoint) = su.endpoint {
-                    let mut write = c.write().await;
+                    let mut write = c.lock().await;
                     write.call.update_server(endpoint, su.token);
                 }
             },
@@ -120,7 +120,7 @@ impl Playback {
                     return;
                 };
 
-                let mut write = c.write().await;
+                let mut write = c.lock().await;
                 write.call.update_state(su.session_id, su.channel_id.map(|i| i.0));
             },
         }

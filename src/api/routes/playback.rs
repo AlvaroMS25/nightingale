@@ -79,7 +79,7 @@ pub async fn play(
             .unwrap();
     };
 
-    player.write().await.enqueue(source, metadata).await;
+    player.lock().await.enqueue(source, metadata).await;
 
     Response::builder()
         .status(StatusCode::OK)
@@ -92,7 +92,7 @@ pub async fn play(
 }
 
 pub async fn pause(PlayerExtractor(player): PlayerExtractor) -> impl IntoResponse {
-    let _ = player.read().await.pause();
+    let _ = player.lock().await.pause();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -101,7 +101,7 @@ pub async fn pause(PlayerExtractor(player): PlayerExtractor) -> impl IntoRespons
 }
 
 pub async fn resume(PlayerExtractor(player): PlayerExtractor) -> impl IntoResponse {
-    let _ = player.read().await.resume();
+    let _ = player.lock().await.resume();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -113,7 +113,7 @@ pub async fn volume(
     PlayerExtractor(player): PlayerExtractor,
     Path(volume): Path<u8>
 ) -> impl IntoResponse {
-    player.write().await.set_volume(volume);
+    player.lock().await.set_volume(volume);
 
     Response::builder()
         .status(StatusCode::OK)

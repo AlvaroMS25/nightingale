@@ -6,7 +6,7 @@ use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::response::Response;
 use serde::Deserialize;
-use tokio::sync::RwLock;
+use tokio::sync::Mutex;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::state::State;
 use crate::playback::player::Player;
@@ -14,7 +14,7 @@ use crate::playback::player::Player;
 const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 pub const MISSING_GUILD_ID: &str = r#"{"message": "Missing guild ID"}"#;
 
-pub struct PlayerExtractor(pub Arc<RwLock<Player>>);
+pub struct PlayerExtractor(pub Arc<Mutex<Player>>);
 
 #[async_trait::async_trait]
 impl FromRequestParts<State> for PlayerExtractor {
