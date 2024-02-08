@@ -5,6 +5,7 @@ use songbird::error::JoinResult;
 use songbird::input::Input;
 use songbird::tracks::{Track as SongbirdTrack, TrackHandle};
 use tokio::sync::Mutex;
+use tracing::warn;
 use crate::playback::metadata::TrackMetadata;
 
 mod handler;
@@ -12,10 +13,15 @@ mod queue;
 
 use queue::Queue;
 
+/// A player of a guild.
 pub struct Player {
+    /// The call used by the player.
     pub call: Call,
+    /// Queue of tracks.
     pub queue: Queue,
+    /// Current volume of the player.
     pub volume: u8,
+    /// Whether if the player is paused.
     pub paused: bool
 }
 
@@ -33,15 +39,30 @@ impl Player {
         this
     }
 
-    pub async fn enqueue<T: Into<Input>>(&mut self, item: T, meta: TrackMetadata) {
-        let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume((self.volume / 100) as _);
-        let handle = self.call.play(track.pause());
-        handle.typemap().write().await.insert::<TrackMetadata>(meta);
+    pub async fn play_now<T: Into<Input>>(&mut self, item: T, meta: TrackMetadata) {
+        self.queue.pause();
+        if self.get_handle(item, meta).await.play().is_err() {
+            warn!("Failed to play track directly, resuming queue");
+            self.queue.resume();
+        }
+    }
 
+    pub async fn enqueue<T: Into<Input>>(&mut self, item: T, meta: TrackMetadata) {
+        let handle = self.get_handle(item, meta).await;
         self.queue.enqueue(handle);
     }
 
+    async fn get_handle<T: Into<Input>>(&mut self, item: T, data: TrackMetadata) -> TrackHandle {
+        let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume((self.volume / 100) as _);
+        let handle = self.call.play(track.pause());
+        handle.typemap().write().await.insert::<TrackMetadata>(data);
+
+        handle
+    }
+
     pub async fn destroy(&mut self) -> JoinResult<()> {
+        self.queue.clear();
+        self.call.remove_all_global_events();
         self.call.leave().await
     }
 

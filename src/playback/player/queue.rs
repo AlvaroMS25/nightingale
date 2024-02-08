@@ -5,9 +5,14 @@ use tracing::{info, warn};
 
 use crate::playback::metadata::TrackMetadata;
 
+/// The queue of a player, keeps the next track in queue loaded so skip
+/// can happen quickly.
 pub struct Queue {
+    /// The currently playing track.
     pub current: Option<TrackHandle>,
+    /// The next track in queue.
     pub next: Option<TrackHandle>,
+    /// The rest of the queue.
     pub rest: VecDeque<TrackHandle>
 }
 
@@ -73,8 +78,11 @@ impl Queue {
     }
 
     pub fn play_load_next(&mut self) {
+        // take the track that finished playing.
+        self.current.take();
+
         if self.should_play() {
-            // if true here, we're empty of songs.
+            // if true here, we're empty of tracks.
             info!("Queue empty");
             return;
         }

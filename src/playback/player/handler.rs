@@ -8,6 +8,7 @@ use crate::playback::metadata::TrackMetadata;
 
 use super::Player;
 
+/// Handler in charge of playing next track in queue after one finishes.
 pub struct PlaybackHandler {
     player: Arc<Mutex<Player>>
 }
@@ -28,11 +29,14 @@ impl EventHandler for PlaybackHandler {
         let EventContext::Track([(_, h), ..]) = ctx else { return None; };
         let mut player = self.player.lock().await;
 
-        if player.queue.current.as_ref().map(|c| c.uuid() != h.uuid()).unwrap_or(true) {
-            // If it was a spontaneous track, continue with ours
-            if player.queue.current.as_ref().map(|t| t.play().ok()).flatten().is_some() {
-                return None
+        match player.queue.current.as_ref().map(|c| c.uuid()) {
+            Some(id) if id != h.uuid() => {
+                // If it was a spontaneous track, continue with ours
+                if player.queue.current.as_ref().map(|t| t.play().ok()).flatten().is_some() {
+                    return None
+                }
             }
+            _ => ()
         }
 
         player.queue.play_load_next();
