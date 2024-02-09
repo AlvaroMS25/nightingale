@@ -138,7 +138,7 @@ pub fn get_thumbnail(item: &Value, video_id: &String) -> String {
 
     match last {
         Some(item) if item.contains("maxresdefault") => item.to_string(),
-        _ => format!("https://i.ytimg.com/vi/{video_id}/mqdefault.jpg")
+        _ => format!("https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg")
     }
 }
 
