@@ -22,6 +22,8 @@ pub fn get_router() -> Router<State> {
         )
         .nest("/search", search::get_router())
         .route("/info", get(info::info))
-        .route("/player", get(player::player))
+        .nest("/player", Router::new()
+            .route("/", get(player::player))
+        )
         .route("/prometheus", get(prometheus::prometheus_metrics))
 }
