@@ -1,3 +1,6 @@
+use std::any::TypeId;
+use std::future::Future;
+use async_trait::async_trait;
 use serde_json::{Map, Number, Value};
 
 pub trait JsonValueExt {
@@ -51,3 +54,49 @@ impl JsonValueExt for Value {
         self.as_object_mut()?.remove(key)?.into_string()
     }
 }
+
+#[async_trait]
+pub trait AsyncOptionExt<T> {
+
+    async fn async_map<Fun, Fut, Ret>(self, predicate: Fun) -> Option<Ret>
+    where
+        Fun: FnOnce(T) -> Fut + Send,
+        Fut: Future<Output = Ret> + Send;
+}
+
+#[async_trait]
+impl<T: Send> AsyncOptionExt<T> for Option<T> {
+    async fn async_map<Fun, Fut, Ret>(self, predicate: Fun) -> Option<Ret>
+    where
+        Fun: FnOnce(T) -> Fut + Send,
+        Fut: Future<Output=Ret> + Send
+    {
+        match self {
+            Some(inner) => Some(predicate(inner).await),
+            None => None
+        }
+    }
+}
+
+#[async_trait]
+pub trait AsyncIteratorExt: Iterator + Sized {
+    async fn async_map<Fun, Fut, Ret, Container>(mut self, mut fun: Fun) -> Container
+    where
+        Self: Send,
+        Self::Item: Send,
+        Fun: FnMut(Self::Item) -> Fut + Send,
+        Fut: Future<Output = Ret> + Send,
+        Ret: Send,
+        Container: FromIterator<Ret>
+    {
+        let mut out = Vec::new();
+
+        while let Some(item) = self.next() {
+            out.push(fun(item).await);
+        }
+
+        Container::from_iter(out.into_iter())
+    }
+}
+
+impl<I> AsyncIteratorExt for I where I: Iterator {}
