@@ -19,7 +19,7 @@ async fn track(handle: &TrackHandle) -> Track {
 pub async fn player(PlayerExtractor(player): PlayerExtractor) -> Json<Player> {
     let mut lock = player.lock().await;
 
-    let p = Player {
+    Json(Player {
         guild_id: lock.guild_id.0,
         channel_id: lock.call.current_channel().map(|c| c.0),
         paused: lock.paused,
@@ -36,7 +36,5 @@ pub async fn player(PlayerExtractor(player): PlayerExtractor) -> Json<Player> {
 
             v
         }
-    };
-
-    Json(p)
+    })
 }
