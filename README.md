@@ -19,7 +19,7 @@ needs better.
 - [ ] Allow forcing tracks to play at arrival
 - [ ] Playback seeking route
 - [ ] Playback skip route
-- [ ] Player information route
+- [x] Player information route
 - [ ] Clear queue route
 - [x] System information such as CPU and Memory usage
 - [ ] Prometheus Metrics
