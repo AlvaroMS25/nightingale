@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use songbird::Call;
 use songbird::error::JoinResult;
+use songbird::id::GuildId;
 use songbird::input::Input;
 use songbird::tracks::{Track as SongbirdTrack, TrackHandle};
 use tokio::sync::Mutex;
@@ -15,6 +16,7 @@ use queue::Queue;
 
 /// A player of a guild.
 pub struct Player {
+    pub guild_id: GuildId,
     /// The call used by the player.
     pub call: Call,
     /// Queue of tracks.
@@ -26,8 +28,9 @@ pub struct Player {
 }
 
 impl Player {
-    pub async fn new(call: Call) -> Arc<Mutex<Self>> {
+    pub async fn new(guild_id: GuildId, call: Call) -> Arc<Mutex<Self>> {
         let this = Arc::new(Mutex::new(Self {
+            guild_id,
             call,
             queue: Queue::new(),
             volume: 100,

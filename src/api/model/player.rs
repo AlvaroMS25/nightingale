@@ -6,10 +6,10 @@ use super::track::Track;
 
 #[derive(Serialize)]
 pub struct Player {
-    guild_id: NonZeroU64,
-    channel_id: NonZeroU64,
-    paused: bool,
-    volume: u8,
-    currently_playing: Option<Track>,
-    queue: Vec<Track>
+    pub guild_id: NonZeroU64,
+    pub channel_id: Option<NonZeroU64>,
+    pub paused: bool,
+    pub volume: u8,
+    pub currently_playing: Option<Track>,
+    pub queue: Vec<Track>
 }

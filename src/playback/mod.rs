@@ -73,7 +73,7 @@ impl Playback {
             );
             call.register_events(s).await;
 
-            let player = Player::new(call).await;
+            let player = Player::new(guild, call).await;
 
             self.players.insert(guild, Arc::clone(&player));
             player
