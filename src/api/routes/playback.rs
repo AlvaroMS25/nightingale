@@ -22,7 +22,7 @@ pub struct PlayQuery {
 
 pub async fn play(
     AxumState(state): AxumState<State>,
-    SessionExtractor(session): SessionExtractor,
+    PlayerExtractor(player): PlayerExtractor,
     Query(query): Query<PlayQuery>,
     Json(options): Json<PlayOptions>
 ) -> impl IntoResponse {
@@ -65,17 +65,6 @@ pub async fn play(
                 super::super::APPLICATION_JSON
             )
             .body(Body::from(r#"{"message": "Failed to serialize track"}"#))
-            .unwrap();
-    };
-
-    let Some(player) = session.playback.get_player(query.guild_id) else {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .header(
-                axum::http::header::CONTENT_TYPE,
-                super::super::APPLICATION_JSON
-            )
-            .body(Body::from(NOT_CONNECTED))
             .unwrap();
     };
 
