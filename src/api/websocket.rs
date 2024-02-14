@@ -19,17 +19,14 @@ use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::ready::Ready;
 use crate::channel::Receiver;
 
-#[derive(serde::Deserialize)]
-pub struct SessionQuery {
-    pub session: Uuid
-}
-
+/// Query used on [`connect`].
 #[derive(serde::Deserialize)]
 pub struct ConnectQuery {
     pub shards: u64,
     pub user_id: NonZeroU64
 }
 
+/// Opens a websocket connection and creates a new session.
 pub async fn connect(
     AxumState(state): AxumState<State>,
     ws: WebSocketUpgrade,
@@ -37,11 +34,14 @@ pub async fn connect(
 ) -> impl IntoResponse {
     let id = state.generate_uuid();
 
+    // Create new session.
     state.instances.insert(id, Arc::new(Session::new(id, options.shards, options.user_id)));
 
     ws.on_upgrade(move |ws| initialize_websocket(state, ws, id, false))
 }
 
+/// Tries to resume an existing session, if the session already has a client connected, returns
+/// a 409 Conflict.
 pub async fn resume(
     AxumState(state): AxumState<State>,
     ws: WebSocketUpgrade,
@@ -58,6 +58,7 @@ pub async fn resume(
     }
 }
 
+/// Initializes and cleans a websocket connection.
 pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, resume: bool) {
     let session = state.instances.get(&id).map(|s| Arc::clone(s.value())).unwrap();
 

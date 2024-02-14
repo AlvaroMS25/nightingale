@@ -19,6 +19,7 @@ mod layers;
 
 const APPLICATION_JSON: &str = "application/json";
 
+/// Starts the Axum Http server.
 pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
     info!("Creating HTTP server");
 

@@ -3,6 +3,8 @@ use futures_util::future::BoxFuture;
 use tower::{Layer, Service};
 use tracing::warn;
 
+/// Authentication layer that verifies the password is provided on a per-request basis
+/// and denies requests that don't have it or provide an incorrect one.
 #[derive(Clone)]
 pub struct RequireAuth(pub String);
 
@@ -17,6 +19,7 @@ impl<S> Layer<S> for RequireAuth {
     }
 }
 
+/// Inner [`RequireAuth`] service.
 #[derive(Clone)]
 pub struct RequireAuthService<S> {
     password: String,

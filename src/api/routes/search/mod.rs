@@ -4,6 +4,7 @@ use crate::api::state::State;
 
 mod youtube;
 
+/// Search related routes.
 pub fn get_router() -> Router<State> {
     Router::new()
         .nest("/youtube", Router::new()

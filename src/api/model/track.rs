@@ -1,6 +1,7 @@
 use serde::Serialize;
 use songbird::input::AuxMetadata;
 
+/// Serializable songbird track.
 #[derive(Serialize, Debug)]
 pub struct Track {
     pub track: Option<String>,

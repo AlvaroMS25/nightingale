@@ -8,12 +8,17 @@ use serde::Deserialize;
 use tracing::{info, warn};
 use crate::api::extractors::session::SessionExtractor;
 
+/// Query used on [`connect`], since the route uses a [`SessionExtractor`], this is not
+// /// the whole needed query.
 #[derive(Deserialize)]
 pub struct ConnectQuery {
     guild_id: NonZeroU64,
     channel_id: NonZeroU64
 }
 
+/// Tries to connect to the provided channel, this route returns a response immediately,
+/// and should not be considered connected until the corresponding `update_state` event is received
+/// by the client.
 pub async fn connect(
     SessionExtractor(session): SessionExtractor,
     Query(query): Query<ConnectQuery>
@@ -31,7 +36,6 @@ pub async fn connect(
             }
         }
     });
-    info!("Sending response");
 
     Response::builder()
         .status(StatusCode::OK)
@@ -39,6 +43,8 @@ pub async fn connect(
         .unwrap()
 }
 
+/// Query used on [`disconnect`], since the route uses a [`SessionExtractor`], this is not
+/// the whole needed query.
 #[derive(Deserialize)]
 pub struct DisconnectQuery {
     guild_id: NonZeroU64

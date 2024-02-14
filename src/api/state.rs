@@ -6,6 +6,7 @@ use uuid::Uuid;
 use crate::api::session::Session;
 use crate::search::Search;
 
+/// The state shared throughout requests.
 #[derive(Clone)]
 pub struct State(Arc<Inner>);
 
@@ -24,10 +25,15 @@ impl State {
 }
 
 pub struct Inner {
+    /// Http client used to make requests.
     pub http: reqwest::Client,
+    /// Running session instances.
     pub instances: DashMap<Uuid, Arc<Session>>,
+    /// Information about the system the server is running on.
     pub system: Mutex<System>,
+    /// The Pid of the server.
     pub pid: Pid,
+    /// Search sources supported by nightingale.
     pub search: Search
 }
 

@@ -22,6 +22,8 @@ async fn players_for(session: &Session) -> (u64, u64) {
     (session.playback.players.len() as u64, playing)
 }
 
+/// Retrieves information about the system running the server. If a session is provided,
+/// information about the session is also sent, if not, information about all the sessions is sent.
 pub async fn info(
     AxumState(state): AxumState<State>,
     session: Option<SessionExtractor>

@@ -15,6 +15,8 @@ use crate::playback::metadata::TrackMetadata;
 
 const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 
+/// Query used by the [`play`] route, since it uses a [`PlayerExtractor`], this is not the
+/// whole query.
 #[derive(Deserialize)]
 pub struct PlayQuery {
     guild_id: NonZeroU64
@@ -80,6 +82,7 @@ pub async fn play(
         .unwrap()
 }
 
+/// Pauses the provided player.
 pub async fn pause(PlayerExtractor(player): PlayerExtractor) -> impl IntoResponse {
     let _ = player.lock().await.pause();
 
@@ -89,6 +92,7 @@ pub async fn pause(PlayerExtractor(player): PlayerExtractor) -> impl IntoRespons
         .unwrap()
 }
 
+/// Resumes the provided player.
 pub async fn resume(PlayerExtractor(player): PlayerExtractor) -> impl IntoResponse {
     let _ = player.lock().await.resume();
 
@@ -98,6 +102,8 @@ pub async fn resume(PlayerExtractor(player): PlayerExtractor) -> impl IntoRespon
         .unwrap()
 }
 
+/// Changes the volume of the provided, player, take into account that going above 100 can lead
+/// to distortions in the playback.
 pub async fn volume(
     PlayerExtractor(player): PlayerExtractor,
     Path(volume): Path<u8>

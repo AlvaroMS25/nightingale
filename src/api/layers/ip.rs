@@ -9,6 +9,8 @@ use futures_util::future::BoxFuture;
 use tower::{Layer, Service, ServiceExt};
 use crate::config::FilterIps;
 
+/// Layer that filters connections using the IPs provided in the configuration file,
+/// filters IPV4 or/and IPV6 IPs.
 #[derive(Clone)]
 pub struct IpFilter(pub FilterIps);
 
@@ -23,6 +25,7 @@ impl<S> Layer<S> for IpFilter {
     }
 }
 
+/// Inner [`IpFilter`] service.
 #[derive(Clone)]
 pub struct IpFilterLayer<S> {
     filter: FilterIps,

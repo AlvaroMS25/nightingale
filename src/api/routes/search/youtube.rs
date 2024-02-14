@@ -9,11 +9,13 @@ use crate::search::youtube::playlist::YoutubePlaylist;
 use crate::search::youtube::track::YoutubeTrack;
 use crate::api::APPLICATION_JSON;
 
+/// Query used on [`search`] route.
 #[derive(Deserialize)]
 pub struct SearchQuery {
     query: String
 }
 
+/// Searches the first page of results from YouTube.
 pub async fn search(
     AxumState(state): AxumState<State>,
     Query(query): Query<SearchQuery>
@@ -32,11 +34,13 @@ pub async fn search(
     }
 }
 
+/// Query used on [`playlist`] route.
 #[derive(Deserialize)]
 pub struct PlaylistQuery {
     playlist_id: String
 }
 
+/// Retrieves a playlist from the given playlist id.
 pub async fn playlist(
     AxumState(state): AxumState<State>,
     Query(query): Query<PlaylistQuery>

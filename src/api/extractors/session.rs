@@ -12,6 +12,9 @@ use crate::api::state::State;
 pub const MISSING_SESSION_ID: &str = r#"{"message": "Missing session ID"}"#;
 pub const SESSION_NOT_PRESENT: &str = r#"{"message": "Session not present"}"#;
 
+/// Extractor that takes a session from the url query and resolves to the corresponding session,
+/// if the session is not provided or invalid, it returns a 400 Bad request with the corresponding
+/// error message.
 pub struct SessionExtractor(pub Arc<Session>);
 
 #[async_trait::async_trait]

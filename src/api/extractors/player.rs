@@ -14,6 +14,11 @@ use crate::playback::player::Player;
 const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 pub const MISSING_GUILD_ID: &str = r#"{"message": "Missing guild ID"}"#;
 
+/// Extractor that takes a guild id from the url query and resolves to the corresponding player,
+/// if the guild is not provided or the player is not available, returns a 400 Bad request
+/// response with the corresponding error message.
+///
+/// This extractor uses the [`SessionExtractor`] under the hood, and needs it to resolve first.
 pub struct PlayerExtractor(pub Arc<Mutex<Player>>);
 
 #[async_trait::async_trait]

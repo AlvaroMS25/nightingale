@@ -4,6 +4,7 @@ use parking_lot::Mutex;
 use uuid::Uuid;
 use crate::playback::Playback;
 
+/// A session containing multiple players managed by a client.
 pub struct Session {
     pub id: Uuid,
     pub playback: Playback,
@@ -11,7 +12,9 @@ pub struct Session {
 }
 
 pub struct SessionOptions {
+    /// Whether if the session is resumable.
     pub enable_resume: bool,
+    /// The time the session has to be resumed.
     pub timeout: Duration
 }
 

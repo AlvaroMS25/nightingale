@@ -16,6 +16,7 @@ async fn track(handle: &TrackHandle) -> Track {
         .unwrap()
 }
 
+/// Retrieves information about the given player.
 pub async fn player(PlayerExtractor(player): PlayerExtractor) -> Json<Player> {
     let mut lock = player.lock().await;
 

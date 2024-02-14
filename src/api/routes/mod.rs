@@ -10,6 +10,7 @@ mod info;
 mod search;
 mod player;
 
+/// API routes.
 pub fn get_router() -> Router<State> {
     Router::new()
         .route("/connect", put(gateway::connect))
