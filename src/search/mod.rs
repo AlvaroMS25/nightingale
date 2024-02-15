@@ -1,5 +1,6 @@
 pub mod youtube;
 
+/// Helper that stores available search sources.
 pub struct Search {
     pub youtube: youtube::YoutubeSearch
 }

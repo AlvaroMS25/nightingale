@@ -23,7 +23,7 @@ const WATCH_URL_PREFIX: &str = "https://www.youtube.com/watch?v=";
 const YOUTUBE_BROWSE_URL: &str = concatcp!(YOUTUBE_BASE_URL, "/browse");
 
 
-
+/// Search client for youtube.
 pub struct YoutubeSearch {
     http: Client,
     default_body: Value

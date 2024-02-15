@@ -6,7 +6,9 @@ use crate::search::youtube::track::YoutubeTrack;
 
 #[derive(Serialize)]
 pub struct YoutubePlaylist {
+    /// Name of the playlist.
     pub name: String,
+    /// Tracks of the playlist.
     pub tracks: Vec<YoutubeTrack>
 }
 

@@ -1,5 +1,6 @@
 use prometheus_client::registry::Registry;
 
+/// Metrics collector used in the prometheus endpoint.
 #[allow(dead_code)]
 pub struct MetricsTracker {
     registry: Registry

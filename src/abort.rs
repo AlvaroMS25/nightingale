@@ -16,10 +16,16 @@ impl Abort {
         }))
     }
 
+    /// Creates a future that will resolve when [`Abort::abort`](Self::abort)
+    /// is called.
     pub fn as_future(&self) -> AbortFuture {
         AbortFuture(Arc::clone(&self.0))
     }
 
+    /// Aborts any [`AbortFuture`]s created by [`Abort::as_future`].
+    /// Subsequent futures created by [`Abort::as_future`] will resolve immediately.
+    ///
+    /// [`Abort#as_future`]: Self::as_future
     pub fn abort(&self) {
         self.0.complete.store(true, Ordering::Release);
 
@@ -46,6 +52,8 @@ impl Inner {
     }
 }
 
+/// Future created by [`Abort#as_future`](Abort::as_future), resolves when
+/// [`Abort#abort`](Abort::abort) is called.
 pub struct AbortFuture(Arc<Inner>);
 
 impl Future for AbortFuture {

@@ -3,6 +3,7 @@ use dashmap::DashMap;
 use songbird::shards::{GenericSharder, VoiceUpdate};
 use crate::channel::{ForShardOwned, Sender};
 
+/// Sharder that manages shard senders provided to [`Call`](songbird::Call)s
 pub struct Sharder {
     pub shard_count: u64,
     pub sender: Sender,

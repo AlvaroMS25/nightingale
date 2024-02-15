@@ -14,7 +14,7 @@ mod queue;
 
 use queue::Queue;
 
-/// A player of a guild.
+/// A player for a guild.
 pub struct Player {
     pub guild_id: GuildId,
     /// The call used by the player.
@@ -42,6 +42,8 @@ impl Player {
         this
     }
 
+    /// Pauses the current playing track (if exists) and plays the provided one
+    /// directly.
     pub async fn play_now<T: Into<Input>>(&mut self, item: T, meta: TrackMetadata) {
         self.queue.pause();
         if self.get_handle(item, meta).await.play().is_err() {
@@ -50,11 +52,14 @@ impl Player {
         }
     }
 
+    /// Enqueues the provided input.
     pub async fn enqueue<T: Into<Input>>(&mut self, item: T, meta: TrackMetadata) {
         let handle = self.get_handle(item, meta).await;
         self.queue.enqueue(handle);
     }
 
+    /// Submits the provided input to the call driver, getting a [`TrackHandle`] and
+    /// inserting the track data.
     async fn get_handle<T: Into<Input>>(&mut self, item: T, data: TrackMetadata) -> TrackHandle {
         let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume((self.volume / 100) as _);
         let handle = self.call.play(track.pause());
@@ -63,22 +68,26 @@ impl Player {
         handle
     }
 
+    /// Destroys the player.
     pub async fn destroy(&mut self) -> JoinResult<()> {
         self.queue.clear();
         self.call.remove_all_global_events();
         self.call.leave().await
     }
 
+    /// Pauses the currently playing track if available.
     pub fn pause(&mut self) {
         self.queue.pause();
         self.paused = true;
     }
 
+    /// Resumes the currently playing track if available.
     pub fn resume(&mut self) {
         self.queue.resume();
         self.paused = false;
     }
 
+    /// Changes the volume of the player.
     pub fn set_volume(&mut self, volume: u8) {
         self.queue.set_volume(volume);
 

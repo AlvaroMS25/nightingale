@@ -48,6 +48,8 @@ impl Queue {
     pub fn skip(&mut self) -> Option<TrackResult<TrackHandle>> {
         let current = self.current.take()?;
 
+        // Stopping the current track triggers the TrackEnd event, so the
+        // event handler will play the next one.
         Some(current.stop().map(|_| current))
     }
 

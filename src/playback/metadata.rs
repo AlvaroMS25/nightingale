@@ -3,8 +3,11 @@ use typemap_rev::TypeMapKey;
 use crate::api::model::track::Track;
 
 
+/// Data inserted to all track handles.
 pub struct TrackMetadata {
+    /// Metadata of the track.
     pub metadata: AuxMetadata,
+    /// The guild the track belongs to.
     pub guild: u64
 }
 

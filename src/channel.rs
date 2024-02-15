@@ -33,6 +33,7 @@ impl Sender {
     }
 }
 
+/// Sender for a shard that wraps [`Value`]s into [`Outgoing#Forward`](Outgoing::Forward)
 pub struct ForShard<'a> {
     shard_id: u64,
     sender: &'a Sender
@@ -64,6 +65,7 @@ impl<'a> ForShard<'a> {
     }
 }
 
+/// Like [`ForShard`] but owned.
 pub struct ForShardOwned {
     shard_id: u64,
     sender: Sender
