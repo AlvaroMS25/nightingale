@@ -13,7 +13,7 @@ use crate::channel::Receiver;
 use crate::playback::player::Player;
 use crate::playback::sharder::Sharder;
 
-mod sharder;
+pub mod sharder;
 pub mod metadata;
 pub mod events;
 pub mod player;

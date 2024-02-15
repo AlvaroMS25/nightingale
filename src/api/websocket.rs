@@ -22,7 +22,10 @@ use crate::channel::Receiver;
 /// Query used on [`connect`].
 #[derive(serde::Deserialize)]
 pub struct ConnectQuery {
+    /// Number of shards the client has, needed to properly
+    /// forward messages through discord's gateway.
     pub shards: u64,
+    /// The user id of the client.
     pub user_id: NonZeroU64
 }
 
@@ -47,6 +50,8 @@ pub async fn resume(
     ws: WebSocketUpgrade,
     SessionExtractor(session): SessionExtractor
 ) -> impl IntoResponse {
+    // Only one connection per session is allowed at a time, so if
+    // the receiver is missing, the connection is already ongoing.
     if session.playback.receiver.lock().is_none() {
       Response::builder()
           .status(StatusCode::CONFLICT)
@@ -98,14 +103,24 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
         }
     });
 }
-
+/// Handler of a websocket connection, handlers and sessions have a 1:1 relationship,
+/// so a handler manages a single session(and a session is managed by a single handler) at a time.
+///
+/// If a client wants to manage multiple sessions at once, a connection per session must be established
 struct WebSocketHandler<'a> {
+    /// Session id.
     id: Uuid,
+    /// The socket itself.
     socket: WebSocket,
     #[allow(unused)]
+    /// State of the server, currenly unused.
     state: State,
+    /// Receiver used by the [`Sharder`](crate::playback::sharder::Sharder) to communicate
+    /// with the clients via this handler.
     receiver: &'a mut Receiver,
+    /// The session managed by the handler.
     session: Arc<Session>,
+    /// Abort used to manually stop the handler.
     abort: Abort
 }
 
@@ -146,6 +161,7 @@ impl WebSocketHandler<'_> {
                 _ => {}
             },
             Err(error) => {
+                // this error is just a boxed tungstenite error.
                 let error = error.into_inner().downcast::<tungstenite::Error>().unwrap();
 
                 warn!("Error ocurred during connection: {error}");
@@ -163,6 +179,7 @@ impl WebSocketHandler<'_> {
             return;
         }
 
+        // Other messages besides voice ones are not currently supported
         match msg {
             _ => {}
         }
