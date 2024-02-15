@@ -24,10 +24,8 @@ pub struct Server {
 #[derive(Deserialize, Debug, Default)]
 #[serde(default)]
 pub struct SslOptions {
-    pub enable: bool,
     pub cert_path: PathBuf,
     pub key_path: PathBuf,
-    pub use_openssl: bool
 }
 
 #[derive(Deserialize, Debug)]

@@ -58,10 +58,8 @@ logging: # Optional field
 #### SSlOptions
 | Field       | Data type                    | Explanation                                                 | Example          |
 |-------------|------------------------------|-------------------------------------------------------------|------------------|
-| enable      | `Boolean`                    | Whether to enable SSl                                       | `true`           |
 | cert_path   | `String`                     | The path to the SSl certificate                             | `certs/cert.pem` |
 | key_path    | `String`                     | The path to the key of the certificate                      | `certs/key.pem`  |
-| use_openssl | `Boolean?` (default `false`) | Whether to use openssl, if not, nightingale will use rustls | `false`          |
 
 #### IpFilter
 | Field | Data type                 | Explanation                                 | Example          |
