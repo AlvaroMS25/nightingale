@@ -1,5 +1,4 @@
 use axum::Json;
-use axum::response::IntoResponse;
 use songbird::tracks::TrackHandle;
 
 use crate::api::extractors::player::PlayerExtractor;
@@ -18,7 +17,7 @@ async fn track(handle: &TrackHandle) -> Track {
 
 /// Retrieves information about the given player.
 pub async fn player(PlayerExtractor(player): PlayerExtractor) -> Json<Player> {
-    let mut lock = player.lock().await;
+    let lock = player.lock().await;
 
     Json(Player {
         guild_id: lock.guild_id.0,

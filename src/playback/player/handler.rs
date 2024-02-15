@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use songbird::{Event, EventContext, EventHandler, TrackEvent};
-use tokio::sync::{Mutex, MutexGuard};
-use tracing::warn;
-use crate::playback::metadata::TrackMetadata;
+use tokio::sync::Mutex;
 
 use super::Player;
 

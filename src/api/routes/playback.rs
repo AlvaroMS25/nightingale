@@ -8,12 +8,9 @@ use serde::Deserialize;
 use songbird::input::{AuxMetadata, Compose, Input, YoutubeDl};
 use tracing::info;
 use crate::api::extractors::player::PlayerExtractor;
-use crate::api::extractors::session::SessionExtractor;
 use crate::api::model::play::{PlayOptions, PlaySource};
 use crate::api::state::State;
 use crate::playback::metadata::TrackMetadata;
-
-const NOT_CONNECTED: &str = r#"{"message": "Not connected to voice"}"#;
 
 /// Query used by the [`play`] route, since it uses a [`PlayerExtractor`], this is not the
 /// whole query.

@@ -1,9 +1,7 @@
 use std::collections::VecDeque;
 
-use songbird::tracks::{Track, TrackHandle, TrackResult};
+use songbird::tracks::{TrackHandle, TrackResult};
 use tracing::{info, warn};
-
-use crate::playback::metadata::TrackMetadata;
 
 /// The queue of a player, keeps the next track in queue loaded so skip
 /// can happen quickly.
