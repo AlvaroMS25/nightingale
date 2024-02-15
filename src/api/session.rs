@@ -29,4 +29,8 @@ impl Session {
             })
         }
     }
+
+    pub async fn destroy(&self) {
+        self.playback.destroy().await;
+    }
 }

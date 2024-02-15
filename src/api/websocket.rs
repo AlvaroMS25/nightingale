@@ -84,12 +84,16 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
         };
 
         if !enable_resume {
-            state.instances.remove(&id);
+            if let Some((_, s)) = state.instances.remove(&id) {
+                s.destroy().await;
+            }
         } else {
             tokio::time::sleep(timeout).await;
 
             if session.playback.receiver.lock().is_some() {
-                state.instances.remove(&id);
+                if let Some((_, s)) = state.instances.remove(&id) {
+                    s.destroy().await;
+                }
             }
         }
     });

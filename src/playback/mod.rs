@@ -125,6 +125,16 @@ impl Playback {
             },
         }
     }
+
+    pub async fn destroy(&self) {
+        let keys = self.players.iter()
+            .map(|i| *i.key())
+            .collect::<Vec<_>>();
+
+        for id in keys {
+            let _ = self.leave(id).await;
+        }
+    }
 }
 
 #[inline]
