@@ -8,13 +8,13 @@ use crate::playback::metadata::TrackMetadata;
 
 /// Track related events listener.
 #[derive(Clone)]
-pub struct TrackMetrics {
+pub struct TrackEvents {
     #[allow(unused)]
     session: Arc<Session>,
     sender: Sender
 }
 
-impl TrackMetrics {
+impl TrackEvents {
     pub async fn new(session: Arc<Session>) -> Self {
         let sender = session.playback.sharder.sender.clone();
 
@@ -26,7 +26,7 @@ impl TrackMetrics {
 }
 
 #[async_trait::async_trait]
-impl EventHandler for TrackMetrics {
+impl EventHandler for TrackEvents {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         let EventContext::Track([(state, handle), ..]) = ctx else { return None; };
 

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use std::time::Duration;
 use songbird::{Call, CoreEvent, Event, EventHandler, TrackEvent};
-use driver::DriverMetrics;
-use periodic::PeriodicMetrics;
-use track::TrackMetrics;
+use driver::DriverEvents;
+use periodic::PeriodicEvents;
+use track::TrackEvents;
 use crate::api::session::Session;
 
 mod periodic;
@@ -34,7 +34,7 @@ impl EventsExt for Call {
     async fn register_events(&mut self, session: Arc<Session>) {
         self.add_global_event(
             Event::Periodic(Duration::from_secs(5), None),
-            PeriodicMetrics::new(Arc::clone(&session)).await
+            PeriodicEvents::new(Arc::clone(&session)).await
         );
 
         chain_events(
@@ -44,7 +44,7 @@ impl EventsExt for Call {
                 TrackEvent::End,
                 TrackEvent::Error
             ],
-            TrackMetrics::new(Arc::clone(&session)).await
+            TrackEvents::new(Arc::clone(&session)).await
         );
 
         chain_events(
@@ -54,7 +54,7 @@ impl EventsExt for Call {
                 CoreEvent::DriverDisconnect,
                 CoreEvent::DriverReconnect
             ],
-            DriverMetrics::new(session).await
+            DriverEvents::new(session).await
         );
 
         chain_events(

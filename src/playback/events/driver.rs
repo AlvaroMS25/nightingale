@@ -6,13 +6,13 @@ use crate::channel::Sender;
 
 /// Event listener for driver events.
 #[derive(Clone)]
-pub struct DriverMetrics {
+pub struct DriverEvents {
     #[allow(unused)]
     session: Arc<Session>,
     sender: Sender
 }
 
-impl DriverMetrics {
+impl DriverEvents {
     pub async fn new(session: Arc<Session>) -> Self {
         let sender = session.playback.sharder.sender.clone();
 
@@ -24,7 +24,7 @@ impl DriverMetrics {
 }
 
 #[async_trait::async_trait]
-impl EventHandler for DriverMetrics {
+impl EventHandler for DriverEvents {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         let state = match ctx {
             EventContext::DriverConnect(d) => UpdateState::ConnectGateway(ConnectionData {

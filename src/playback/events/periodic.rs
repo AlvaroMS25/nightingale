@@ -4,14 +4,14 @@ use crate::api::session::Session;
 use crate::channel::Sender;
 
 /// Periodic events emitter.
-pub struct PeriodicMetrics {
+pub struct PeriodicEvents {
     #[allow(unused)]
     session: Arc<Session>,
     #[allow(unused)]
     sender: Sender
 }
 
-impl PeriodicMetrics {
+impl PeriodicEvents {
     pub async fn new(session: Arc<Session>) -> Self {
         let sender = session.playback.sharder.sender.clone();
 
@@ -23,7 +23,7 @@ impl PeriodicMetrics {
 }
 
 #[async_trait::async_trait]
-impl EventHandler for PeriodicMetrics {
+impl EventHandler for PeriodicEvents {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         let _ = ctx;
         None
