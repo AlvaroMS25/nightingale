@@ -76,8 +76,6 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
 
         info!("Websocket connection finished");
 
-        *session.playback.receiver.lock() = Some(receiver);
-
         let (enable_resume, timeout) = {
             let lock = session.options.lock();
             (lock.enable_resume, lock.timeout)
@@ -88,6 +86,8 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
                 s.destroy().await;
             }
         } else {
+            *session.playback.receiver.lock() = Some(receiver);
+
             tokio::time::sleep(timeout).await;
 
             if session.playback.receiver.lock().is_some() {
