@@ -113,7 +113,7 @@ impl WebSocketHandler<'_> {
     #[tracing::instrument(skip(resume))]
     async fn run(mut self, resume: bool) {
         info!("Websocket connection established");
-        self.resume_if_needed(resume).await;
+        self.send_ready(resume).await;
         let mut abort = self.abort.as_future();
         loop {
             tokio::select! {
@@ -168,7 +168,7 @@ impl WebSocketHandler<'_> {
         }
     }
 
-    async fn resume_if_needed(&mut self, resume: bool) {
+    async fn send_ready(&mut self, resume: bool) {
         self.send(Outgoing::Ready(Ready {
             resumed: resume,
             session: self.id
