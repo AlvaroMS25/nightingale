@@ -3,6 +3,7 @@ use songbird::{Event, EventContext, EventHandler};
 use crate::api::session::Session;
 use crate::channel::Sender;
 
+/// Periodic events emitter.
 pub struct PeriodicMetrics {
     #[allow(unused)]
     session: Arc<Session>,

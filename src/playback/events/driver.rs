@@ -4,6 +4,7 @@ use crate::api::model::{connection::{ConnectionData, DisconnectData, UpdateState
 use crate::api::session::Session;
 use crate::channel::Sender;
 
+/// Event listener for driver events.
 #[derive(Clone)]
 pub struct DriverMetrics {
     #[allow(unused)]

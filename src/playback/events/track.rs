@@ -6,6 +6,7 @@ use crate::api::session::Session;
 use crate::channel::Sender;
 use crate::playback::metadata::TrackMetadata;
 
+/// Track related events listener.
 #[derive(Clone)]
 pub struct TrackMetrics {
     #[allow(unused)]

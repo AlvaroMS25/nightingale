@@ -115,8 +115,8 @@ struct WebSocketHandler<'a> {
     #[allow(unused)]
     /// State of the server, currenly unused.
     state: State,
-    /// Receiver used by the [`Sharder`](crate::playback::sharder::Sharder) to communicate
-    /// with the clients via this handler.
+    /// Receiver used by the sharder and event handlers to forward payloads
+    /// to this handler clients.
     receiver: &'a mut Receiver,
     /// The session managed by the handler.
     session: Arc<Session>,
