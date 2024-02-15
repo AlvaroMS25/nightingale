@@ -1,12 +1,10 @@
 use std::time::Duration;
 use tracing::{info, Level};
 use crate::config::{Config, LoggingLevel};
-use crate::error::Error;
 
 mod playback;
 mod api;
 mod config;
-mod error;
 mod channel;
 mod abort;
 mod metrics;
@@ -65,7 +63,7 @@ fn main() {
     rt.shutdown_timeout(Duration::from_secs(5));
 }
 
-async fn entrypoint(config: Config) -> Result<(), Error> {
+async fn entrypoint(config: Config) -> std::io::Result<()> {
     tokio::spawn(api::start_http(config));
 
     tokio::signal::ctrl_c().await?;
