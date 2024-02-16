@@ -1,5 +1,5 @@
 use std::time::Duration;
-use tracing::{info, Level};
+use tracing::{error, info, Level};
 use crate::config::{Config, LoggingLevel};
 
 mod playback;
@@ -64,10 +64,19 @@ fn main() {
 }
 
 async fn entrypoint(config: Config) -> std::io::Result<()> {
-    tokio::spawn(api::start_http(config));
+    let mut handle = tokio::spawn(api::start_http(config));
+    let ctrlc = tokio::signal::ctrl_c();
 
-    tokio::signal::ctrl_c().await?;
-    info!("Ctrl C pressed");
+    tokio::pin!(ctrlc);
+
+    tokio::select! {
+        Ok(Err(res)) = &mut handle => {
+            error!("Http server exited prematurely, error: {}", res.to_string());
+        },
+        _ = &mut ctrlc => {
+            info!("Ctrl C pressed");
+        }
+    }
 
     Ok(())
 }

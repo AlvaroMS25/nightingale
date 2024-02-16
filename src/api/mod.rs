@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 
 use axum::Router;
 use axum::routing::get;
+use axum_server::tls_rustls::RustlsConfig;
 use tracing::info;
 use layers::auth::RequireAuth;
 use crate::api::layers::ip::IpFilter;
@@ -38,12 +39,21 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
 
     info!(
         "Starting HTTP{} server on {}:{}",
-        if config.server.ssl.map(|s| s.enable).unwrap_or(false) { "S" } else { "" },
+        if config.server.ssl.is_some() { "S" } else { "" },
         config.server.address,
         config.server.port
     );
 
-    axum_server::Server::bind(format!("{}:{}", config.server.address, config.server.port).parse().unwrap())
-        .serve(router.into_make_service_with_connect_info::<SocketAddr>())
-        .await
+    let addr = format!("{}:{}", config.server.address, config.server.port).parse().unwrap();
+    if let Some(ssl_config) = config.server.ssl {
+        axum_server::bind_rustls(
+            addr,
+            RustlsConfig::from_pem_file(ssl_config.cert_path, ssl_config.key_path).await?
+        ).serve(router.into_make_service_with_connect_info::<SocketAddr>()).await
+    } else {
+        axum_server::Server::bind(addr)
+            .serve(router.into_make_service_with_connect_info::<SocketAddr>())
+            .await
+    }
+
 }
