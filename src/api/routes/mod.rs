@@ -28,3 +28,31 @@ pub fn get_router() -> Router<State> {
         )
         .route("/prometheus", get(prometheus::prometheus_metrics))
 }
+
+/*
+TODO: reorganize routes
+
+    /ws:
+        - / -> connect to websocket
+        - /resume -> resume a previous session
+    /api/v1:
+        - /connect -> connect to voice
+        - /search/... -> search on sources
+        - /info(?session) -> system information (about session or all of them)
+        - /prometheus -> prometheus metrics
+
+        - /players/{session}/{guild}
+            - /info
+            - /play
+            - /pause
+            - /resume
+            - /set_volume/<vol>
+            - /queue:
+                - /
+                - /clear
+            - /disconnect
+
+
+
+
+ */
