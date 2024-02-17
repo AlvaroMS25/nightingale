@@ -42,15 +42,15 @@ TODO: reorganize routes
         - /prometheus -> prometheus metrics
 
         - /players/{session}/{guild}
-            - /info
-            - /play
-            - /pause
-            - /resume
-            - /set_volume/<vol>
+            - /info (get)
+            - /play (post)
+            - /pause (patch)
+            - /resume (patch)
+            - /set_volume/<vol> (patch)
             - /queue:
-                - /
-                - /clear
-            - /disconnect
+                - / (patch)
+                - /clear (put)
+            - /disconnect (delete)
 
 
 
