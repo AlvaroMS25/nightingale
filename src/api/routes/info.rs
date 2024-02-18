@@ -14,7 +14,7 @@ async fn players_for(session: &Session) -> (u64, u64) {
     for c in session.playback.players.iter() {
         let player = c.lock().await;
 
-        if player.call.queue().current().is_some() {
+        if player.queue.current().is_some() {
             playing += 1;
         }
     }
