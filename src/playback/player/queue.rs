@@ -92,6 +92,7 @@ impl Queue {
 
             if !self.load_next() {
                 warn!("Queue finished after having an error playing a track");
+                self.current.take();
                 return;
             }
         }
