@@ -28,7 +28,7 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
 
     let mut router = Router::new()
         .route("/ws", get(websocket::connect))
-        .route("/ws/resume", get(websocket::resume))
+        .route("/ws/resume/:session", get(websocket::resume))
         .nest("/api/v1", routes::get_router())
         .layer(RequireAuth(config.server.password.clone()))
         .with_state(state);
