@@ -88,8 +88,7 @@ pub async fn connect(
 }
 
 pub async fn disconnect(
-    SessionExtractor(session): SessionExtractor,
-    Path((_, guild)): Path<(Uuid, NonZeroU64)>
+    SessionWithGuildExtractor{session, guild}: SessionWithGuildExtractor
 ) -> impl IntoResponse {
     let _ = session.playback.leave(guild).await;
 
