@@ -30,6 +30,7 @@ ipnet = { version = "2.9.0", features = ["serde"]}
 prometheus-client = "0.22"
 sysinfo = "0.30"
 const_format = "0.2.31"
+which = "6.0.0"
 
 [dependencies.symphonia]
 version = "0.5.3"
