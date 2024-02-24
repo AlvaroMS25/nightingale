@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use super::track::Track;
 
-/// Serializable player object returned from the player info route.
+/// Serializable player object.
 #[derive(Serialize, Debug)]
 pub struct Player {
     pub guild_id: NonZeroU64,
