@@ -23,34 +23,7 @@ use crate::playback::metadata::TrackMetadata;
 
 /// Retrieves information about the given player.
 pub async fn info(PlayerExtractor {player, ..}: PlayerExtractor) -> Json<Player> {
-    async fn track(handle: &TrackHandle) -> Track {
-        let read = handle.typemap().read().await;
-
-        read.get::<TrackMetadata>()
-            .map(|t| t.track())
-            .unwrap()
-    }
-
-    let lock = player.lock().await;
-
-    Json(Player {
-        guild_id: lock.guild_id.0,
-        channel_id: lock.call.current_channel().map(|c| c.0),
-        paused: lock.paused,
-        volume: lock.volume,
-        currently_playing: lock.queue.current.as_ref().async_map(track).await,
-        queue: {
-            let mut v = Vec::new();
-
-            if let Some(next) = lock.queue.next.as_ref().async_map(track).await {
-                v.push(next);
-            }
-
-            v.extend(lock.queue.rest.iter().async_map::<_, _, _, Vec<_>>(track).await);
-
-            v
-        }
-    })
+    Json(player.lock().await.as_json().await)
 }
 
 /// Query used on [`connect`], since the route uses a [`SessionExtractor`], this is not

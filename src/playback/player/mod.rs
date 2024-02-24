@@ -1,5 +1,7 @@
-use std::sync::Arc;
+mod handler;
+mod queue;
 
+use std::sync::Arc;
 use songbird::Call;
 use songbird::error::JoinResult;
 use songbird::id::GuildId;
@@ -8,11 +10,10 @@ use songbird::tracks::{Track as SongbirdTrack, TrackHandle};
 use tokio::sync::Mutex;
 use tracing::warn;
 use crate::playback::metadata::TrackMetadata;
-
-mod handler;
-mod queue;
-
+use crate::api::model::player::Player as PlayerModel;
 use queue::Queue;
+use crate::api::model::track::Track as TrackModel;
+use crate::ext::{AsyncIteratorExt, AsyncOptionExt};
 
 /// A player for a guild.
 pub struct Player {
@@ -92,5 +93,35 @@ impl Player {
         self.queue.set_volume(volume);
 
         self.volume = volume;
+    }
+
+    pub async fn as_json(&self) -> PlayerModel {
+        async fn track(handle: &TrackHandle) -> TrackModel {
+            let read = handle.typemap().read().await;
+
+            read.get::<TrackMetadata>()
+                .map(|t| t.track())
+                .unwrap()
+        }
+
+        PlayerModel {
+            guild_id: self.guild_id.0,
+            channel_id: self.call.current_channel().map(|c| c.0),
+            paused: self.paused,
+            volume: self.volume,
+            currently_playing: self.queue.current.as_ref().async_map(track).await,
+            queue: {
+                let mut v = Vec::new();
+
+                if let Some(next) = self.queue.next.as_ref().async_map(track).await {
+                    v.push(next);
+                }
+
+                v.extend(self.queue.rest.iter().async_map::<_, _, _, Vec<_>>(track).await);
+
+                v
+            }
+
+        }
     }
 }
