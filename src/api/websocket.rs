@@ -125,7 +125,7 @@ struct WebSocketHandler<'a> {
     /// The socket itself.
     socket: WebSocket,
     #[allow(unused)]
-    /// State of the server, currenly unused.
+    /// State of the server, currently unused.
     state: State,
     /// Receiver used by the sharder and event handlers to forward payloads
     /// to this handler clients.
@@ -198,9 +198,22 @@ impl WebSocketHandler<'_> {
     }
 
     async fn send_ready(&mut self, resume: bool) {
+        let players = if resume {
+            let mut players = Vec::with_capacity(self.session.playback.players.len());
+
+            for player in self.session.playback.players.iter() {
+                players.push(player.lock().await.as_json().await)
+            }
+
+            Some(players)
+        } else {
+            None
+        };
+
         self.send(Outgoing::Ready(Ready {
             resumed: resume,
-            session: self.id
+            session: self.id,
+            players
         })).await
     }
 
