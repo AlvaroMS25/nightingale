@@ -1,6 +1,7 @@
 use std::num::NonZeroU64;
 use std::time::Duration;
 use parking_lot::Mutex;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 use crate::playback::Playback;
 
@@ -8,7 +9,8 @@ use crate::playback::Playback;
 pub struct Session {
     pub id: Uuid,
     pub playback: Playback,
-    pub options: Mutex<SessionOptions>
+    pub options: Mutex<SessionOptions>,
+    pub cleanup: Mutex<Option<CancellationToken>>
 }
 
 pub struct SessionOptions {
@@ -26,7 +28,8 @@ impl Session {
             options: Mutex::new(SessionOptions {
                 enable_resume: true,
                 timeout: Duration::from_secs(60)
-            })
+            }),
+            cleanup: Mutex::new(None)
         }
     }
 

@@ -8,6 +8,7 @@ use axum::extract::ws::{Message, WebSocket};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use futures::StreamExt;
+use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 use crate::abort::Abort;
@@ -58,8 +59,10 @@ pub async fn resume(
           .body(Body::from(r#"{"message": "session taken"}"#))
           .unwrap()
     } else {
-        let session_id = session.id;
-        ws.on_upgrade(move |ws| initialize_websocket(state, ws, session_id, true))
+        if let Some(token) = session.cleanup.lock().take() {
+            token.cancel(); // Tell the cancellation task to exit
+        }
+        ws.on_upgrade(move |ws| initialize_websocket(state, ws, session.id, true))
     }
 }
 
@@ -87,17 +90,26 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
         };
 
         if !enable_resume {
+            debug!("Session[{id}] not allowed to resume, cleaning up");
             if let Some((_, s)) = state.instances.remove(&id) {
                 s.destroy().await;
             }
         } else {
+            debug!("Session[{id}] is allowed to resume, waiting {timeout:?} before cleaning up");
             *session.playback.receiver.lock() = Some(receiver);
+            let token = CancellationToken::new();
+            let future = token.clone().cancelled_owned();
+            *session.cleanup.lock() = Some(token);
 
-            tokio::time::sleep(timeout).await;
-
-            if session.playback.receiver.lock().is_some() {
-                if let Some((_, s)) = state.instances.remove(&id) {
-                    s.destroy().await;
+            match tokio::time::timeout(timeout, future).await {
+                Ok(_) => {
+                    debug!("Session[{id}] was resumed");
+                },
+                Err(_) => {
+                    debug!("Session[{id}] was not resumed, cleaning up");
+                    if let Some((_, s)) = state.instances.remove(&id) {
+                        s.destroy().await;
+                    }
                 }
             }
         }
