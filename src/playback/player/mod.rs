@@ -1,6 +1,8 @@
 mod handler;
 mod queue;
 
+use std::fmt;
+use std::fmt::Pointer;
 use std::sync::Arc;
 use songbird::Call;
 use songbird::error::JoinResult;
@@ -8,7 +10,7 @@ use songbird::id::GuildId;
 use songbird::input::Input;
 use songbird::tracks::{Track as SongbirdTrack, TrackHandle};
 use tokio::sync::Mutex;
-use tracing::warn;
+use tracing::{info, instrument, warn};
 use crate::playback::metadata::TrackMetadata;
 use crate::api::model::player::Player as PlayerModel;
 use queue::Queue;
@@ -70,7 +72,9 @@ impl Player {
     }
 
     /// Destroys the player.
+    #[instrument]
     pub async fn destroy(&mut self) -> JoinResult<()> {
+        info!("Destroying player");
         self.queue.clear();
         self.call.remove_all_global_events();
         self.call.leave().await
@@ -123,5 +127,13 @@ impl Player {
             }
 
         }
+    }
+}
+
+impl fmt::Debug for Player {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Player")
+            .field("guild", &self.guild_id)
+            .finish()
     }
 }

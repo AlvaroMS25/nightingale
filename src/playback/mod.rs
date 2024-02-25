@@ -6,6 +6,7 @@ use songbird::Call;
 use songbird::error::JoinResult;
 use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::Mutex as AsyncMutex;
+use tracing::debug;
 use events::EventsExt;
 use crate::api::model::voice::VoiceEvent;
 use crate::api::session::Session;
@@ -103,6 +104,7 @@ impl Playback {
         match event {
             VoiceEvent::UpdateVoiceServer(su) => {
                 let Some(c) = self.players.get(&(su.guild_id.0.into())) else {
+                    debug!("No player found for guild {}, skipping", su.guild_id.0);
                     return;
                 };
 
@@ -113,6 +115,7 @@ impl Playback {
             },
             VoiceEvent::UpdateVoiceState(su) => {
                 if su.user_id.0 != self.user_id.0 {
+                    debug!("Event was not about bot user, skipping");
                     return;
                 }
 

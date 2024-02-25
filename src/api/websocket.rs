@@ -185,9 +185,8 @@ impl WebSocketHandler<'_> {
     async fn handle_message(&mut self, msg: Incoming) {
         debug!("Received message: {msg:?}");
         if msg.is_voice_event() {
-            debug!("Received a voice event, forwarding to songbird");
+            debug!("Received a voice event");
             self.session.playback.process_event(msg.into()).await;
-            debug!("Event forwarded");
             return;
         }
 
