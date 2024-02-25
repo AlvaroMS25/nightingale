@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::api::model::track::Track;
 
 /// Sources that can be used to play from.
 #[derive(Deserialize, Serialize)]
@@ -8,7 +9,10 @@ pub enum PlaySource {
     /// Provided by link, `yt-dlp` must support the provided source.
     Link(String),
     /// Provided the whole track in bytes, ready to play without querying any more information.
-    Bytes(Vec<u8>)
+    Bytes {
+        track: Track,
+        bytes: Vec<u8>
+    }
 }
 
 /// Play options provided when requesting tracks.

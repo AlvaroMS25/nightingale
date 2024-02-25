@@ -78,9 +78,9 @@ pub async fn play(
 ) -> impl IntoResponse {
     info!("Received play request");
     let (source, metadata): (Input, _) = match options.source {
-        PlaySource::Bytes(bytes) => {
+        PlaySource::Bytes {track, bytes} => {
             (bytes.into(), TrackMetadata {
-                metadata: AuxMetadata::default(),
+                metadata: track.into(),
                 guild: guild.get()
             })
         },
