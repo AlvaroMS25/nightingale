@@ -114,6 +114,15 @@ impl Queue {
         }
     }
 
+    pub fn force_track(&mut self, track: TrackHandle) {
+        if let Some(next) = self.next.take() {
+            self.rest.push_front(next);
+        }
+
+        self.next = self.current.take();
+        self.current = Some(track);
+    }
+
     pub fn clear(&mut self) {
         self.current.take().map(|t| t.stop());
         self.next.take().map(|t| t.stop());

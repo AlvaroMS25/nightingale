@@ -49,10 +49,12 @@ impl Player {
     /// directly.
     pub async fn play_now<T: Into<Input>>(&mut self, item: T, meta: TrackMetadata) {
         self.queue.pause();
-        if self.get_handle(item, meta).await.play().is_err() {
+        let handle = self.get_handle(item, meta).await;
+        if handle.play().is_err() {
             warn!("Failed to play track directly, resuming queue");
             self.queue.resume();
         }
+        self.queue.force_track(handle);
     }
 
     /// Enqueues the provided input.
