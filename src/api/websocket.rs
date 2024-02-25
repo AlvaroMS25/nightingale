@@ -176,7 +176,7 @@ impl WebSocketHandler<'_> {
                 // this error is just a boxed tungstenite error.
                 let error = error.into_inner().downcast::<tungstenite::Error>().unwrap();
 
-                warn!("Error ocurred during connection: {error}");
+                warn!("Error occurred during connection: {error}");
                 self.abort.abort();
             }
         }
