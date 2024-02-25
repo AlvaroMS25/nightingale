@@ -118,7 +118,12 @@ pub async fn play(
             .unwrap();
     };
 
-    player.lock().await.enqueue(source, metadata).await;
+    if options.force_play {
+        player.lock().await.play_now(source, metadata).await;
+    } else {
+        player.lock().await.enqueue(source, metadata).await;
+    }
+
 
     Response::builder()
         .status(StatusCode::OK)
