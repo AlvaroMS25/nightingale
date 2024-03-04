@@ -17,7 +17,7 @@ The request must contain the following queries:
 | `shards`   | `Integer` | Number of shards the bot has |
 | `user_id`  | `Integer` | User id of the bot           |
 
-After a connection is established, the server will send a [Ready](#ready) event.
+After a connection is established, the server will send a [Ready](#ready) event. In this case, the `players` field will be empty.
 
 ## Resuming a connection
 If for a reason, the client disconnects from the server, the session can be resumed
@@ -27,6 +27,10 @@ This request only requires a single header:
 ``
 session: Integer. The session id of the session to resume, this is the id received in the Ready event
 ``
+
+After successfully resuming a session, the server will send a [Ready](#ready) event. In this case, the `field` players will
+contain all the players that are present in the server, this can be used to synchronize players with the client after resuming
+sessions.
 
 # Incoming Events
 Nightingale sends events to the clients via the WebSocket gateway, all events have the following
@@ -44,10 +48,11 @@ structure:
 When a client connects to the server, nightingale will send a `ready` event, as its name says,
 this event corresponds to the `ready` opcode. The structure of this event is the following:
 
-| Field     | Data type | Explanation                                 |
-|-----------|-----------|---------------------------------------------|
-| `session` | `Uuid`    | The identifier assigned to this session     |
-| `resumed` | `Boolean` | Whether the session has been resumed or not |
+| Field     | Data type                                  | Explanation                                 |
+|-----------|--------------------------------------------|---------------------------------------------|
+| `session` | `Uuid`                                     | The identifier assigned to this session     |
+| `resumed` | `Boolean`                                  | Whether the session has been resumed or not |
+| `players` | Vec<[Player](#getting-player-information)> | Players present on the server               |
 
 <details>
 <summary>Example payload</summary>
@@ -280,6 +285,7 @@ There are 3 different track events:
 ```
 </details>
 
+### Track object
 The track object has the following fields:
 
 | Field        | Data type  |
@@ -357,16 +363,18 @@ Most interactions(such as managing playback) with Nightingale are done through t
 Before making any requests, you must connect to the gateway and receive the [Ready](#ready) event,
 because all requests need you to provide the session given on that payload.
 
+# Session Specific API
+This section covers the part of the api that is session specific, all routes must be prefixed with `/api/v1/<session>`
+where `<session>` is the session id received in the [Ready](#ready) event.
+
 ## Joining and Leaving voice channels.
 
 ### Joining a voice channel
-To join a voice channel, a `put` http request must be done against `/api/v1/connect`,
+To join a voice channel, a `put` http request must be done against `/players/<guild_id>/connect`,
 providing the following queries:
 
 | Query        | Data type | Explanation                                         |
 |--------------|-----------|-----------------------------------------------------|
-| `session`    | `Uuid`    | The session received in the [ready](#ready) payload |
-| `guild_id`   | `Integer` | The guild id to connect to                          |
 | `channel_id` | `Integer` | The channel id to connect to                        |
 
 If all queries are provided and valid, Nightingale will automatically respond with an `200 OK` status, but this
@@ -375,13 +383,8 @@ and *voice server* update payloads, the connection will be really established wh
 emit the `connect_gateway` event. Receiving it means the server is **actually** connected to the voice channel.
 
 ### Leaving a voice channel
-To leave a voice channel, a `delete` http request must be done against the path `/api/v1/disconnect`,
+To leave a voice channel, a `delete` http request must be done against the path `/players/<guild_id>/disconnect`,
 providing the following queries:
-
-| Query      | Data type | Explanation                                         |
-|------------|-----------|-----------------------------------------------------|
-| `session`  | `Uuid`    | The session received in the [ready](#ready) payload |
-| `guild_id` | `Integer` | The guild id to disconnect from                     |
 
 Receiving a `200 OK` response **does** mean the server disconnected from the channel, however, the `disconnect_gateway`
 event will still be fired.
@@ -389,13 +392,8 @@ event will still be fired.
 ## Playback
 ### Playing tracks
 As of now, Nightingale supports playing from either a link from a source supported by [yt-dlp] or providing a file in bytes
-to play from, to do this, a `post` request must be done agains the path `/api/v1/playback/play`,
+to play from, to do this, a `post` request must be done against the path `/players/<guild_id>/play`,
 providing the following queries:
-
-| Query      | Data type | Explanation                                         |
-|------------|-----------|-----------------------------------------------------|
-| `session`  | `Uuid`    | The session received in the [ready](#ready) payload |
-| `guild_id` | `Integer` | The guild to play on                                |
 
 And a json body with the following fields:
 
@@ -409,23 +407,37 @@ And a json body with the following fields:
 | Field  | Options                                                               | Explanation                 |
 |--------|-----------------------------------------------------------------------|-----------------------------|
 | `type` | `"link"` or `"bytes"`                                                 | The type of source provided |
-| `data` | `ByteArray` if `type` is `"bytes"` and `String` if `type` is `"link"` | The actual source           |
+| `data` | `PlayBytes` if `type` is `"bytes"` and `String` if `type` is `"link"` | The actual source           |
 
-A `Track` object with the track requested is returned from the server.
+`PlayBytes` is a json object with the following fields:
+
+| Field   | Data type                                             | Explanation            |
+|---------|-------------------------------------------------------|------------------------|
+| `track` | [Track](#track-object) described at track start event | The track object       |
+| `bytes` | `ByteArray`                                           | The bytes of the track |
+
+
+This endpoint returns a [Track](#track-object) object, the same as described at track start event.
 
 ### Pausing and resuming playback
 To pause or resume playback, a `patch` request against the paths 
-`/api/v1/playback/pause` and `/api/v1/playback/resume` respectively must be done,
-providing the following queries:
-
-| Query      | Data type | Explanation                                         |
-|------------|-----------|-----------------------------------------------------|
-| `session`  | `Uuid`    | The session received in the [ready](#ready) payload |
-| `guild_id` | `Integer` | The guild id to disconnect from                     |
+`/players/<guild_id>/pause` and `/players/<guild_id>/resume` respectively must be done.
 
 ### Modifying playback volume
-To modify the volume, a `patch` request must be done against the path `/api/v1/playback/volume/<new_volume>`
+To modify the volume, a `patch` request must be done against the path `/players/<guild_id>/volume/<new_volume>`
 where `<new_volume>` is the new volume to set as a `float`. Please take into account that a value of 1.0 means a 100% volume, so be
 careful with the values used.
 
-This endpoint requires the same queries as the [leave voice](#leaving-a-voice-channel) one.
+## Getting player information
+To get information about a player, make a `get` request against the path `/players/<guild_id>/info`. This route returns a
+player object that represents the state of a player. The object has the following fields:
+
+| Field               | Data type                   |
+|---------------------|-----------------------------|
+| `guild_id`          | `Integer`                   |
+| `channel_id`        | `Integer?`                  |
+| `paused`            | `Boolean`                   |
+| `volume`            | `Integer` (from 0 to 254)   |
+| `currently_playing` | [Track?](#track-object)     |
+| `queue`             | Vec<[Track](#track-object)> |
+
