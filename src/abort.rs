@@ -25,7 +25,7 @@ impl Abort {
     /// Aborts any [`AbortFuture`]s created by [`Abort::as_future`].
     /// Subsequent futures created by [`Abort::as_future`] will resolve immediately.
     ///
-    /// [`Abort#as_future`]: Self::as_future
+    /// [`Abort::as_future`]: Self::as_future
     pub fn abort(&self) {
         self.0.complete.store(true, Ordering::Release);
 
