@@ -48,11 +48,11 @@ structure:
 When a client connects to the server, nightingale will send a `ready` event, as its name says,
 this event corresponds to the `ready` opcode. The structure of this event is the following:
 
-| Field     | Data type                                  | Explanation                                 |
-|-----------|--------------------------------------------|---------------------------------------------|
-| `session` | `Uuid`                                     | The identifier assigned to this session     |
-| `resumed` | `Boolean`                                  | Whether the session has been resumed or not |
-| `players` | Vec<[Player](#getting-player-information)> | Players present on the server               |
+| Field     | Data type                                | Explanation                                 |
+|-----------|------------------------------------------|---------------------------------------------|
+| `session` | `Uuid`                                   | The identifier assigned to this session     |
+| `resumed` | `Boolean`                                | Whether the session has been resumed or not |
+| `players` | [Player](#getting-player-information)[ ] | Players present on the server               |
 
 <details>
 <summary>Example payload</summary>
@@ -363,11 +363,17 @@ Most interactions(such as managing playback) with Nightingale are done through t
 Before making any requests, you must connect to the gateway and receive the [Ready](#ready) event,
 because all requests need you to provide the session given on that payload.
 
+# Non-session Specific API
+The routes described on this section don't need the session received on the [Ready](#ready)
+
+### Getting system information
+
+
 # Session Specific API
 This section covers the part of the api that is session specific, all routes must be prefixed with `/api/v1/<session>`
 where `<session>` is the session id received in the [Ready](#ready) event.
 
-## Joining and Leaving voice channels.
+## Player related routes
 
 ### Joining a voice channel
 To join a voice channel, a `put` http request must be done against `/players/<guild_id>/connect`,
@@ -389,7 +395,6 @@ providing the following queries:
 Receiving a `200 OK` response **does** mean the server disconnected from the channel, however, the `disconnect_gateway`
 event will still be fired.
 
-## Playback
 ### Playing tracks
 As of now, Nightingale supports playing from either a link from a source supported by [yt-dlp] or providing a file in bytes
 to play from, to do this, a `post` request must be done against the path `/players/<guild_id>/play`,
@@ -428,16 +433,15 @@ To modify the volume, a `patch` request must be done against the path `/players/
 where `<new_volume>` is the new volume to set as a `float`. Please take into account that a value of 1.0 means a 100% volume, so be
 careful with the values used.
 
-## Getting player information
+### Getting player information
 To get information about a player, make a `get` request against the path `/players/<guild_id>/info`. This route returns a
 player object that represents the state of a player. The object has the following fields:
 
-| Field               | Data type                   |
-|---------------------|-----------------------------|
-| `guild_id`          | `Integer`                   |
-| `channel_id`        | `Integer?`                  |
-| `paused`            | `Boolean`                   |
-| `volume`            | `Integer` (from 0 to 254)   |
-| `currently_playing` | [Track?](#track-object)     |
-| `queue`             | Vec<[Track](#track-object)> |
-
+| Field               | Data type                 |
+|---------------------|---------------------------|
+| `guild_id`          | `Integer`                 |
+| `channel_id`        | `Integer?`                |
+| `paused`            | `Boolean`                 |
+| `volume`            | `Integer` (from 0 to 254) |
+| `currently_playing` | [Track](#track-object)?   |
+| `queue`             | [Track](#track-object)[ ] |
