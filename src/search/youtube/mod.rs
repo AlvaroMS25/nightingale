@@ -11,7 +11,7 @@ use crate::search::youtube::playlist::YoutubePlaylist;
 use crate::search::youtube::track::YoutubeTrack;
 
 const CLIENT_ANDROID_NAME: &str = "ANDROID";
-const CLIENT_ANDROID_VERSION: &str = "17.29.34";
+const CLIENT_ANDROID_VERSION: &str = "18.06.35";
 const ANDROID_SDK_VERSION: u8 = 30;
 const DEFAULT_ANDROID_VERSION: &str = "11";
 const SEARCH_PARAMS: &str = "EgIQAUICCAE=";
