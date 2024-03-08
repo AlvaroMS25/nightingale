@@ -16,7 +16,7 @@ needs better.
 - IP Whitelisting
 
 ## Roadmap
-- [ ] Allow forcing tracks to play at arrival
+- [x] Allow forcing tracks to play at arrival
 - [ ] Playback seeking route
 - [ ] Playback skip route
 - [x] Player information route
