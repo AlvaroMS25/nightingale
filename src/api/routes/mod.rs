@@ -11,7 +11,10 @@ mod player;
 /// API routes.
 pub fn get_router() -> Router<State> {
     Router::new()
-        .route("/info", get(info::info))
+        .nest("/info", Router::new()
+            .route("/", get(info::info))
+            .route("/:session", get(info::info))
+        )
         .route("/prometheus", get(prometheus::prometheus_metrics))
         .nest("/search", search::get_router())
         .nest("/:session", Router::new()
