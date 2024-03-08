@@ -366,7 +366,150 @@ because all requests need you to provide the session given on that payload.
 # Non-session Specific API
 The routes described on this section don't need the session received on the [Ready](#ready)
 
-### Getting system information
+## Getting system information
+To get the current information about the system, a `get` request against the path `/api/v1/info` must be done.
+This route also accepts a trailing route path: a session id. If the session is provided, the `playback` field will only
+reflect the session players, if not, it will contain all active sessions players.
+
+The server responds with the following json object:
+
+| Field      | Data type      |
+|------------|----------------|
+| `system`   | `SystemInfo`   |
+| `playback` | `PlaybackInfo` |
+
+**SystemInfo:**
+
+| Field    | Data type    |
+|----------|--------------|
+| `cpu`    | `CpuInfo`    |
+| `memory` | `MemoryInfo` |
+
+**CpuInfo:**
+
+| Field           | Data type    | Explanation                                    |
+|-----------------|--------------|------------------------------------------------|
+| `total_usage`   | `float`      | Total system usage (not process) in percentage |
+| `process_usage` | `float`      | System usage of the process in percentage      |
+| `cores`         | `CoreInfo[]` | Individual core information                    |
+
+**CoreInfo:**
+
+| Field         | Data type | Explanation                     |
+|---------------|-----------|---------------------------------|
+| `total_usage` | `float`   | Usage of the core in percentage |
+| `frequency`   | `integer` | Core frequency in MHz           |
+
+
+**Memory Info**
+
+| Field            | Data type | Explanation                 |
+|------------------|-----------|-----------------------------|
+| `memory`         | `integer` | Memory usage (RSS) in bytes |
+| `virtual_memory` | `integer` | Virtual memory in bytes     |
+
+**PlaybackInfo:**
+
+| Field     | Data type | Explanation                         |
+|-----------|-----------|-------------------------------------|
+| `players` | `integer` | Number of existing players          |
+| `playing` | `integer` | Number of players currently playing |
+
+<details>
+<summary>Example payload</summary>
+
+```json
+{
+    "system": {
+        "cpu": {
+            "total_usage": 11.812126,
+            "process_usage": 0.0,
+            "cores": [
+                {
+                    "total_usage": 15.017052,
+                    "frequency": 3808
+                }, ...
+            ]
+        },
+        "memory": {
+            "memory": 22024192,
+            "virtual_memory": 10321920
+        }
+    },
+    "playback": {
+        "players": 0,
+        "playing": 0
+    }
+}
+```
+
+</details>
+
+## Searching from sources
+As of today, only searching from youtube is supported
+
+### Searching from youtube
+
+### Searching for query results
+To search for results on youtube, make a `get` request against the path `/api/v1/search/youtube/search` providing a
+`query` query on the url.
+
+This route returns a list of Youtube specific track objects, which have the following fields:
+
+### Youtube track
+| Field       | Data type | Explanation                             |
+|-------------|-----------|-----------------------------------------|
+| `title`     | `String`  | The title of the track or video         |
+| `author`    | `String?` | The author, if available                |
+| `length`    | `Integer` | The length of the track in milliseconds |
+| `video_id`  | `String`  | The Id of the video                     |
+| `is_stream` | `Boolean` | Whether the video is a stream or not    |
+| `url`       | `String`  | The URL of the video                    |
+| `thumbnail` | `String`  | URL to the thumbnail of the video       |
+
+<details>
+<summary>Usage example</summary>
+
+get request to `<HOST>/api/v1/search/youtube/search?query=never%20gonna%20give%20you%20up`
+with the authorization header.
+
+Response:
+```json
+[
+    {
+        "title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+        "author": "Rick Astley",
+        "length": 213000,
+        "video_id": "dQw4w9WgXcQ",
+        "is_stream": false,
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+    },
+    {
+        "title": "Rick Astley - Never Gonna Give You Up [Lyrics]",
+        "author": "GlyphoricVibes",
+        "length": 214000,
+        "video_id": "QdezFxHfatw",
+        "is_stream": false,
+        "url": "https://www.youtube.com/watch?v=QdezFxHfatw",
+        "thumbnail": "https://i.ytimg.com/vi/QdezFxHfatw/maxresdefault.jpg"
+    },
+    ...
+]
+```
+
+</details>
+
+### Getting tracks from a playlist
+TO get all the tracks from a playlist, make a `get` request against the path `/api/v1/search/youtube/playlist` providing
+a `playlist_id` query with the playlist id.
+
+This route returns a playlist object with the following fields:
+
+| Field    | Data type                         | Explanation            |
+|----------|-----------------------------------|------------------------|
+| `name`   | `String`                          | Name of the playlist   |
+| `tracks` | [YoutubeTrack](#Youtube-track)[ ] | Tracks of the playlist |
 
 
 # Session Specific API
