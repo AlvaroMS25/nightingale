@@ -32,32 +32,3 @@ pub fn get_router() -> Router<State> {
             )
         )
 }
-
-/*
-TODO: reorganize routes
-
-    /ws:
-        - / -> connect to websocket
-        - /resume -> resume a previous session
-    /api/v1:
-        - /search/... -> search on sources
-        - /info(?session) -> system information (about session or all of them)
-        - /prometheus -> prometheus metrics
-
-        - /{session}:
-            - /connect -> connect to voice
-            - /players/{guild}
-                - /info (get)
-                - /play (post)
-                - /pause (patch)
-                - /resume (patch)
-                - /set_volume/<vol> (patch)
-                - /queue:
-                    - / (patch)
-                    - /clear (put)
-                - /disconnect (delete)
-
-
-
-
- */
