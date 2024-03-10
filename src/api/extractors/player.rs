@@ -44,6 +44,12 @@ impl FromRequestParts<State> for PlayerExtractor {
                 )
                 .await?;
 
+        Self::from_id(session, state, guild)
+    }
+}
+
+impl PlayerExtractor {
+    pub fn from_id(session: Uuid, state: &State, guild: NonZeroU64) -> Result<Self, Response> {
         let SessionExtractor(session) = SessionExtractor::from_id(session, state)?;
 
         let Some(player) = session.playback.get_player(guild) else {

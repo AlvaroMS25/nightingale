@@ -158,13 +158,14 @@ pub async fn resume(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoR
 /// Changes the volume of the provided, player, take into account that going above 100 can lead
 /// to distortions in the playback.
 pub async fn volume(
-    PlayerExtractor {player, ..}: PlayerExtractor,
-    Path(volume): Path<u8>
-) -> impl IntoResponse {
+    AxumState(state): AxumState<State>,
+    Path((session, guild, volume)): Path<(Uuid, NonZeroU64, u8)>
+) -> Result<Response, Response> {
+    let PlayerExtractor { player, .. } = PlayerExtractor::from_id(session, &state, guild)?;
     player.lock().await.set_volume(volume);
 
-    Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .body(Body::empty())
-        .unwrap()
+        .unwrap())
 }
