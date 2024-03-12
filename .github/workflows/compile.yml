@@ -77,7 +77,7 @@ jobs:
           rustup target add i686-unknown-linux-gnu
       
       - name: Build executable
-        run: rustup run i686-unknown-linux-gnu cargo build --release
+        run: rustup run stable-i686-unknown-linux-gnu cargo build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
