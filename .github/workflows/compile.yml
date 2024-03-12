@@ -101,10 +101,10 @@ jobs:
         config:
           - name: AppleSilicon
             toolchain: aarch64-apple-darwin
-            default: true
+            default: false
           - name: Intel
             toolchain: x86_64-apple-darwin
-            default: false
+            default: true
     steps:
       - uses: actions/checkout@v4
 
