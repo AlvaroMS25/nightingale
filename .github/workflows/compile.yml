@@ -111,11 +111,10 @@ jobs:
           - name: AppleSilicon
             toolchain: aarch64-apple-darwin
             os: macos-14
-            default: false
           - name: Intel
             toolchain: x86_64-apple-darwin
             os: macos-latest
-            default: true
+            
     steps:
       - uses: actions/checkout@v4
       
