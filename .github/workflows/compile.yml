@@ -103,28 +103,24 @@ jobs:
           compression-level: 0
 
   build-macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
         config:
           - name: AppleSilicon
             toolchain: aarch64-apple-darwin
+            os: macos-14
             default: false
           - name: Intel
             toolchain: x86_64-apple-darwin
+            os: macos-latest
             default: true
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install rust toolchain
-        if: ${{ !matrix.config.default }}
-        run: |
-          rustup install stable-${{ matrix.config.toolchain }} --force-non-host
-          rustup target add ${{ matrix.config.toolchain }}
       
       - name: Build executable
-        run: rustup run stable-${{ matrix.config.toolchain }} cargo build --release
+        run: cargo build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
