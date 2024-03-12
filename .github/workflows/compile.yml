@@ -1,4 +1,4 @@
-name: Rust
+name: Compile Binaries
 
 on:
   workflow_dispatch:
@@ -9,31 +9,45 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  prepare-out-dir:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Create dir
-        run: mkdir out_dir
-
-  build-windows:
+  #build-windows:
 
     #runs-on: ubuntu-latest
-    runs-on: windows-latest
-    needs: prepare-out-dir
+    #runs-on: windows-latest
+    #strategy:
+      #matrix:
+       # config:
+        #  - name: W32 bits
+       #     arch: x86
+
+      #    - name: W64 bits
+     #       arch: x64
+
+    #steps:
+    #- uses: actions/checkout@v4
+    
+    #- name: Build executable
+     # run: cargo build --release
+      
+    #- name: Upload artifact
+      #uses: actions/upload-artifact@v4
+
+      #with:
+        #name: ${{ github.job }}-${{ matrix.arch }}
+        #path: ./target/release/nightingale.exe
+        #compression-level: 0
+
+  see-arch:
+    runs-on: windows_latest
+    strategy:
+      matrix:
+        config:
+          - name: "w32"
+            arch: x86
+          - name: "w64"
+            arch: x64
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Build executable
-      run: cargo build --release
-      
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-
-      with:
-        name: ${{ github.job }}
-        path: ./target/release/nightingale.exe
-        compression-level: 0
+      - run: wmic os get osarchitecture
+            
       
 
