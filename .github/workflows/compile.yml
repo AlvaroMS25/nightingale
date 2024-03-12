@@ -78,7 +78,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          apt-get install gcc-multilib
+          sudo apt-get install gcc-multilib
       
       - name: Build executable
         run: rustup run stable-i686-unknown-linux-gnu cargo build --release
