@@ -73,7 +73,7 @@ jobs:
 
       - name: Install x86 toolchain
         run: |
-          rustup install stable-i686-unknown-linux-gnu
+          rustup install stable-i686-unknown-linux-gnu --force-non-host
           rustup target add i686-unknown-linux-gnu
       
       - name: Build executable
