@@ -77,8 +77,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install non-arm system dependencies
+        if: ${{ !contains(matrix.config-toolchain, 'arm') }}
         run: sudo apt-get install -y gcc-multilib
+
+      - name: Intall arm system dependencies
+        if: ${{ contains(matrix.config-toolchain, 'arm') }}
+        run: sudo apt-get install -qq gcc-arm-linux-gnueabihf
 
       - name: Install rust toolchain
         if: ${{ !matrix.config.default }}
