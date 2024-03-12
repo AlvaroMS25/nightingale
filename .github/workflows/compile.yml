@@ -9,45 +9,51 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  #build-windows:
+  build-windows-x64:
 
     #runs-on: ubuntu-latest
-    #runs-on: windows-latest
-    #strategy:
-      #matrix:
-       # config:
-        #  - name: W32 bits
-       #     arch: x86
-
-      #    - name: W64 bits
-     #       arch: x64
-
-    #steps:
-    #- uses: actions/checkout@v4
-    
-    #- name: Build executable
-     # run: cargo build --release
-      
-    #- name: Upload artifact
-      #uses: actions/upload-artifact@v4
-
-      #with:
-        #name: ${{ github.job }}-${{ matrix.arch }}
-        #path: ./target/release/nightingale.exe
-        #compression-level: 0
-
-  see-arch:
-    runs-on: windows_latest
-    strategy:
-      matrix:
-        config:
-          - name: "w32"
-            arch: x86
-          - name: "w64"
-            arch: x64
+    runs-on: windows-latest
 
     steps:
-      - run: wmic os get osarchitecture
+    - uses: actions/checkout@v4
+    
+    - name: Build executable
+      run: cargo build --release
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+
+      with:
+        name: ${{ github.job }}
+        path: ./target/release/nightingale.exe
+        compression-level: 0
+
+  build-windows-x86:
+
+    #runs-on: ubuntu-latest
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Clang
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: latest
+        platform: x86
+    
+    - name: Build executable
+      run: |
+        rustup install stable-i686-pc-windows-gnu
+        rustup run stable-i686-pc-windows-gnu cargo build --release
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+
+      with:
+        name: ${{ github.job }}
+        path: ./target/release/nightingale.exe
+        compression-level: 0
             
       
 
