@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
-          path: ./target/release/nightingale.exe
+          path: ./target/release/nightingale
           compression-level: 0
       
 
