@@ -1,0 +1,39 @@
+name: Rust
+
+on:
+  workflow_call:
+  #push:
+    #branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  prepare-out-dir:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create dir
+        run: mkdir out_dir
+
+  build-windows:
+
+    #runs-on: ubuntu-latest
+    runs-on: windows-latest
+    needs: prepare-out-dir
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build executable
+      run: cargo build --release
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+
+      with:
+        name: ${{ github.job }}
+        path: ./target/release/nightingale.exe
+        compression-level: 0
+      
+
