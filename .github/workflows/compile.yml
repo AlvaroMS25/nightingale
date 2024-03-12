@@ -36,17 +36,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Clang
-      uses: egor-tensin/setup-clang@v1
-      with:
-        version: latest
-        platform: x86
-    
-    - name: Build executable
+    - name: Install x86 toolchain
       run: |
         rustup install stable-i686-pc-windows-msvc
         rustup target add i686-pc-windows-msvc
-        rustup run stable-i686-pc-windows-msvc cargo build --release
+    
+    - name: Build executable
+      run: rustup run stable-i686-pc-windows-msvc cargo build --release
       
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -55,6 +51,22 @@ jobs:
         name: ${{ github.job }}
         path: ./target/release/nightingale.exe
         compression-level: 0
-            
+        
+  build-linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build executable
+        run: |
+          rustup toolchain list
+          cargo build --release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.job }}
+          path: ./target/release/nightingale.exe
+          compression-level: 0
       
 
