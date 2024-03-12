@@ -53,42 +53,35 @@ jobs:
         
   build-linux-x64:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+          - name: x64
+            toolchain: x86_64-unknown-linux-gnu 
+            default: true
+          - name: x86
+            toolchain: i686-unknown-linux-gnu
+            default: false
+    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Build executable
-        run: cargo build --release
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.job }}
-          path: ./target/release/nightingale
-          compression-level: 0
-
-  build-linux-x86:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install x86 toolchain
-        run: |
-          rustup install stable-i686-unknown-linux-gnu --force-non-host
-          rustup target add i686-unknown-linux-gnu
 
       - name: Install system dependencies
+        run: sudo apt-get install -y gcc-multilib
+
+      - name: Install rust toolchain
+        if: ${{ !matrix.config.default }}
         run: |
-          sudo apt-get install -y gcc-multilib
-          sudo apt-get install -y libssl-dev
+          rustup install stable-${{ matrix.config.toolchain }} --force-non-host
+          rustup target add ${{ matrix.config.toolchain }}
       
       - name: Build executable
-        run: rustup run stable-i686-unknown-linux-gnu cargo build --release
+        run: rustup run stable-${{ matrix.config.toolchain }} cargo build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.job }}
+          name: ${{ github.job }}-${{ matrix.config.name }}
           path: ./target/release/nightingale
           compression-level: 0
-      
 
