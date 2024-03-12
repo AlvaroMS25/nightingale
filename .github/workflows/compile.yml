@@ -75,6 +75,10 @@ jobs:
         run: |
           rustup install stable-i686-unknown-linux-gnu --force-non-host
           rustup target add i686-unknown-linux-gnu
+
+      - name: Install system dependencies
+        run: |
+          apt-get install gcc-multilib
       
       - name: Build executable
         run: rustup run stable-i686-unknown-linux-gnu cargo build --release
