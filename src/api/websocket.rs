@@ -153,13 +153,13 @@ impl WebSocketHandler<'_> {
                     self.send(msg).await;
                 },
                 Some(msg) = self.socket.next() => {
-                    self.handle_possible_error(msg).await;
+                    self.handle_message(msg).await;
                 }
             }
         }
     }
 
-    async fn handle_possible_error(&mut self, msg: Result<Message, Error>) {
+    async fn handle_message(&mut self, msg: Result<Message, Error>) {
         match msg {
             Ok(msg) => match msg {
                 Message::Close(frame) => {
