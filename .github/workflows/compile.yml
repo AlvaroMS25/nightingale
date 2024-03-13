@@ -64,26 +64,12 @@ jobs:
           - name: x86
             toolchain: i686-unknown-linux-gnu
             default: false
-          - name: arm64
-            toolchain: aarch64-unknown-linux-gnu
-            default: false
-          - name: armv7
-            toolchain: armv7-unknown-linux-gnueabihf
-            default: false
-          - name: arm-gnueabihf
-            toolchain: arm-unknown-linux-gnueabihf
-            default: false
     
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install non-arm system dependencies
-        if: ${{ !contains(matrix.config-toolchain, 'arm') }}
+      - name: Install system dependencies
         run: sudo apt-get install -y gcc-multilib
-
-      - name: Intall arm system dependencies
-        if: ${{ contains(matrix.config-toolchain, 'arm') }}
-        run: sudo apt-get install -qq gcc-arm-linux-gnueabihf
 
       - name: Install rust toolchain
         if: ${{ !matrix.config.default }}
@@ -94,6 +80,35 @@ jobs:
       
       - name: Build executable
         run: rustup run stable-${{ matrix.config.toolchain }} cargo build --release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.job }}-${{ matrix.config.name }}
+          path: ./target/release/nightingale
+          compression-level: 0
+
+  build-linux-arm:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: arm64
+            toolchain: aarch64-unknown-linux-gnu
+          - name: armv7
+            toolchain: armv7-unknown-linux-gnueabihf
+          - name: arm-gnueabihf
+            toolchain: arm-unknown-linux-gnueabihf
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: build
+          args: "--release"
+          target: ${{ matrix.config.toolchain }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
