@@ -27,33 +27,15 @@ pub async fn info(PlayerExtractor {player, ..}: PlayerExtractor) -> Json<Player>
     Json(player.lock().await.as_json().await)
 }
 
-/// Query used on [`connect`], since the route uses a [`SessionExtractor`], this is not
-// /// the whole needed query.
-#[derive(Deserialize)]
-pub struct ConnectQuery {
-    channel_id: NonZeroU64
-}
-
 /// Tries to connect to the provided channel, this route returns a response immediately,
 /// and should not be considered connected until the corresponding `update_state` event is received
 /// by the client.
 pub async fn connect(
     SessionWithGuildExtractor {session, guild}: SessionWithGuildExtractor,
-    Query(query): Query<ConnectQuery>
 ) -> impl IntoResponse {
     info!("Incoming connection request");
-    tokio::spawn(async move {
-
-        match session.playback.join(guild, query.channel_id, Arc::clone(&session)).await {
-            Ok(_) => {
-                info!("Connecting voice on guild {} and channel id {}", guild, query.channel_id);
-            },
-            Err(error) => {
-                warn!("An error occurred when connecting voice on guild {}, error: {}", guild, error);
-                let _ = session.playback.leave(guild).await;
-            }
-        }
-    });
+    session.playback.get_or_create(guild, Arc::clone(&session)).await;
+    info!("Created player for guild {guild}");
 
     Response::builder()
         .status(StatusCode::OK)

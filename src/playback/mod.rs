@@ -44,24 +44,21 @@ impl Playback {
             .map(|v| Arc::clone(v.value()))
     }
 
-    pub async fn join<G, C>(
+    pub async fn get_or_create<G>(
         &self, 
-        guild: G, 
-        channel_id: C, 
+        guild: G,
         s: Arc<Session>
     ) -> Arc<AsyncMutex<Player>>
     where
         G: Into<GuildId>,
-        C: Into<ChannelId>
     {
         let guild = guild.into();
-        let channel_id = channel_id.into();
         if self.players.contains_key(&guild) {
             self.players.get(&guild)
                 .map(|v| Arc::clone(v.value()))
                 .unwrap()
         } else {
-            let mut player = Player::new(guild).await;
+            let mut player = Player::new(guild);
             player.register_events(s).await;
 
             let player = Arc::new(AsyncMutex::new(player));

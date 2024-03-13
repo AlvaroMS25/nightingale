@@ -31,7 +31,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub async fn new(guild_id: GuildId) -> Self {
+    pub fn new(guild_id: GuildId) -> Self {
         Self {
             guild_id,
             driver: Driver::new(Default::default()),
