@@ -162,10 +162,6 @@ impl WebSocketHandler<'_> {
     async fn handle_possible_error(&mut self, msg: Result<Message, Error>) {
         match msg {
             Ok(msg) => match msg {
-                Message::Text(msg) => match serde_json::from_str::<Incoming>(&msg) {
-                    Err(error) => tracing::error!("Invalid payload received, error: {error}"),
-                    Ok(incoming) => self.handle_message(incoming).await
-                },
                 Message::Close(frame) => {
                     info!("Close message received, frame: {frame:?}");
                     self.abort.abort()
@@ -179,20 +175,6 @@ impl WebSocketHandler<'_> {
                 warn!("Error occurred during connection: {error}");
                 self.abort.abort();
             }
-        }
-    }
-
-    async fn handle_message(&mut self, msg: Incoming) {
-        debug!("Received message: {msg:?}");
-        if msg.is_voice_event() {
-            debug!("Received a voice event");
-            self.session.playback.process_event(msg.into()).await;
-            return;
-        }
-
-        // Other messages besides voice ones are not currently supported
-        match msg {
-            _ => {}
         }
     }
 
