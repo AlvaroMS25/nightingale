@@ -115,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}-${{ matrix.config.name }}
-          path: ./target/release/nightingale
+          path: ./target/${{ matrix.config.toolchain }}/release/nightingale
           compression-level: 0
 
   build-macos:
