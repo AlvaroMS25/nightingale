@@ -21,6 +21,7 @@ pub fn get_router() -> Router<State> {
             .nest("/players/:guild", Router::new()
                 .route("/connect", put(player::connect))
                 .route("/disconnect", delete(player::disconnect))
+                .route("/update", patch(player::update))
                 .route("/info", get(player::info))
                 .route("/play", post(player::play))
                 .route("/pause", patch(player::pause))

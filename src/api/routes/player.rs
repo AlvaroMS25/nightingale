@@ -14,6 +14,7 @@ use uuid::Uuid;
 
 use crate::api::extractors::player::PlayerExtractor;
 use crate::api::extractors::session::{SessionExtractor, SessionWithGuildExtractor};
+use crate::api::model::connection::DeserializableConnectionInfo;
 use crate::api::model::play::{PlayOptions, PlaySource};
 use crate::api::model::player::Player;
 use crate::api::model::track::Track;
@@ -168,4 +169,13 @@ pub async fn volume(
         .status(StatusCode::OK)
         .body(Body::empty())
         .unwrap())
+}
+
+pub async fn update(
+    PlayerExtractor { player, .. }: PlayerExtractor,
+    Json(body): Json<DeserializableConnectionInfo>
+) -> impl IntoResponse {
+
+
+    StatusCode::OK
 }
