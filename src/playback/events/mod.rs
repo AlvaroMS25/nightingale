@@ -1,10 +1,11 @@
 use std::sync::Arc;
 use std::time::Duration;
-use songbird::{Call, CoreEvent, Event, EventHandler, TrackEvent};
+use songbird::{Call, CoreEvent, Driver, Event, EventHandler, TrackEvent};
 use driver::DriverEvents;
 use periodic::PeriodicEvents;
 use track::TrackEvents;
 use crate::api::session::Session;
+use crate::playback::player::Player;
 
 mod periodic;
 mod track;
@@ -15,14 +16,14 @@ pub trait EventsExt {
     async fn register_events(&mut self, session: Arc<Session>);
 }
 
-fn chain_events<I, T, H>(call: &mut Call, events: I, handler: H)
+fn chain_events<I, T, H>(driver: &mut Driver, events: I, handler: H)
 where
     I: IntoIterator<Item = T>,
     T: Into<Event>,
     H: EventHandler + 'static + Clone
 {
     for event in events {
-        call.add_global_event(
+        driver.add_global_event(
             event.into(),
             handler.clone()
         );
@@ -30,15 +31,15 @@ where
 }
 
 #[async_trait::async_trait]
-impl EventsExt for Call {
+impl EventsExt for Player {
     async fn register_events(&mut self, session: Arc<Session>) {
-        self.add_global_event(
+        self.driver.add_global_event(
             Event::Periodic(Duration::from_secs(5), None),
             PeriodicEvents::new(Arc::clone(&session)).await
         );
 
         chain_events(
-            self,
+            &mut self.driver,
             [
                 TrackEvent::Play,
                 TrackEvent::End,
@@ -48,7 +49,7 @@ impl EventsExt for Call {
         );
 
         chain_events(
-            self,
+            &mut self.driver,
             [
                 CoreEvent::DriverConnect,
                 CoreEvent::DriverDisconnect,
@@ -58,7 +59,7 @@ impl EventsExt for Call {
         );
 
         chain_events(
-            self,
+            &mut self.driver,
             [
                 CoreEvent::DriverConnect,
                 CoreEvent::DriverDisconnect,

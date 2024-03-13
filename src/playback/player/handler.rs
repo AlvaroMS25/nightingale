@@ -15,7 +15,7 @@ impl PlaybackHandler {
     pub async fn register(player: Arc<Mutex<Player>>) {
         let mut lock = player.lock().await;
 
-        lock.call.add_global_event(TrackEvent::End.into(), Self {
+        lock.driver.add_global_event(TrackEvent::End.into(), Self {
             player: Arc::clone(&player)
         });
     }

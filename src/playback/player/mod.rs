@@ -1,10 +1,10 @@
-mod handler;
-mod queue;
+pub mod handler;
+pub mod queue;
 
 use std::fmt;
 use std::fmt::Pointer;
 use std::sync::Arc;
-use songbird::Call;
+use songbird::Driver;
 use songbird::error::JoinResult;
 use songbird::id::GuildId;
 use songbird::input::Input;
@@ -21,7 +21,7 @@ use crate::ext::{AsyncIteratorExt, AsyncOptionExt};
 pub struct Player {
     pub guild_id: GuildId,
     /// The call used by the player.
-    pub call: Call,
+    pub driver: Driver,
     /// Queue of tracks.
     pub queue: Queue,
     /// Current volume of the player.
@@ -31,18 +31,16 @@ pub struct Player {
 }
 
 impl Player {
-    pub async fn new(guild_id: GuildId, call: Call) -> Arc<Mutex<Self>> {
-        let this = Arc::new(Mutex::new(Self {
+    pub async fn new(guild_id: GuildId) -> Self {
+        Self {
             guild_id,
-            call,
+            driver: Driver::new(Default::default()),
             queue: Queue::new(),
             volume: 100,
             paused: false
-        }));
+        }
 
-        handler::PlaybackHandler::register(Arc::clone(&this)).await;
-
-        this
+        //handler::PlaybackHandler::register(Arc::clone(&this)).await;
     }
 
     /// Pauses the current playing track (if exists) and plays the provided one
