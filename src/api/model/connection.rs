@@ -1,4 +1,7 @@
 use std::num::NonZeroU64;
+use songbird::ConnectionInfo;
+use songbird::id::UserId;
+use crate::api::model::voice::NzU64;
 
 /// Possible `update_state` payloads.
 #[non_exhaustive]
@@ -35,4 +38,30 @@ pub struct DisconnectData {
     pub guild_id: NonZeroU64,
     /// The session if of the connectio.
     pub session_id: String
+}
+
+/// Connection information used to connect to a voice channel
+#[derive(serde::Deserialize, Debug)]
+pub struct DeserializableConnectionInfo {
+    /// Channel id to connect to.
+    pub channel_id: Option<NzU64>,
+    /// Endpoint to connect to.
+    pub endpoint: String,
+    /// Session id of the connection.
+    pub session_id: String,
+    /// Token of the connection.
+    pub token: String
+}
+
+impl DeserializableConnectionInfo {
+    pub fn into_songbird(self, user_id: NonZeroU64, guild_id: NonZeroU64) -> ConnectionInfo {
+        ConnectionInfo {
+            channel_id: self.channel_id.map(Into::into),
+            endpoint: self.endpoint,
+            guild_id: guild_id.into(),
+            session_id: self.session_id,
+            token: self.token,
+            user_id: user_id.into()
+        }
+    }
 }
