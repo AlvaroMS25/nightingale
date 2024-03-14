@@ -21,10 +21,10 @@ pub struct SessionOptions {
 }
 
 impl Session {
-    pub fn new(id: Uuid, shards: u64, user_id: NonZeroU64) -> Self {
+    pub fn new(id: Uuid, user_id: NonZeroU64) -> Self {
         Self {
             id,
-            playback: Playback::new(shards, user_id),
+            playback: Playback::new(user_id),
             options: Mutex::new(SessionOptions {
                 enable_resume: true,
                 timeout: Duration::from_secs(60)

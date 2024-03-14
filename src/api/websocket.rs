@@ -23,9 +23,6 @@ use crate::channel::Receiver;
 /// Query used on [`connect`].
 #[derive(serde::Deserialize)]
 pub struct ConnectQuery {
-    /// Number of shards the client has, needed to properly
-    /// forward messages through discord's gateway.
-    pub shards: u64,
     /// The user id of the client.
     pub user_id: NonZeroU64
 }
@@ -39,7 +36,7 @@ pub async fn connect(
     let id = state.generate_uuid();
 
     // Create new session.
-    state.instances.insert(id, Arc::new(Session::new(id, options.shards, options.user_id)));
+    state.instances.insert(id, Arc::new(Session::new(id, options.user_id)));
 
     ws.on_upgrade(move |ws| initialize_websocket(state, ws, id, false))
 }
