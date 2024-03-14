@@ -35,7 +35,6 @@ pub async fn connect(
 ) -> impl IntoResponse {
     info!("Incoming connection request");
     session.playback.get_or_create(guild, Arc::clone(&session)).await;
-    info!("Created player for guild {guild}");
 
     Response::builder()
         .status(StatusCode::OK)
@@ -46,7 +45,7 @@ pub async fn connect(
 pub async fn disconnect(
     SessionWithGuildExtractor{session, guild}: SessionWithGuildExtractor
 ) -> impl IntoResponse {
-    let _ = session.playback.leave(guild).await;
+    let _ = session.playback.destroy_player(guild).await;
 
     Response::builder()
         .status(StatusCode::OK)

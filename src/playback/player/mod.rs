@@ -4,9 +4,9 @@ pub mod queue;
 use std::fmt;
 use std::fmt::Pointer;
 use std::sync::Arc;
-use songbird::Driver;
-use songbird::error::JoinResult;
-use songbird::id::GuildId;
+use songbird::{ConnectionInfo, Driver};
+use songbird::error::{ConnectionError, JoinResult};
+use songbird::id::{ChannelId, GuildId};
 use songbird::input::Input;
 use songbird::tracks::{Track as SongbirdTrack, TrackHandle};
 use tokio::sync::Mutex;
@@ -20,6 +20,7 @@ use crate::ext::{AsyncIteratorExt, AsyncOptionExt};
 /// A player for a guild.
 pub struct Player {
     pub guild_id: GuildId,
+    pub channel_id: Option<ChannelId>,
     /// The call used by the player.
     pub driver: Driver,
     /// Queue of tracks.
@@ -36,6 +37,7 @@ impl Player {
     pub fn new(guild_id: GuildId) -> Self {
         Self {
             guild_id,
+            channel_id: None,
             driver: Driver::new(Default::default()),
             queue: Queue::new(),
             volume: 100,
@@ -67,19 +69,31 @@ impl Player {
     /// inserting the track data.
     async fn get_handle<T: Into<Input>>(&mut self, item: T, data: TrackMetadata) -> TrackHandle {
         let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume((self.volume / 100) as _);
-        let handle = self.call.play(track.pause());
+        let handle = self.driver.play(track.pause());
         handle.typemap().write().await.insert::<TrackMetadata>(data);
 
         handle
     }
 
+    pub async fn update(&mut self, info: Option<ConnectionInfo>) -> Result<(), ConnectionError> {
+        if let Some(info) = info {
+            self.channel_id = info.channel_id;
+            self.driver.connect(info).await
+        } else {
+            self.driver.leave();
+            Ok(())
+        }
+    }
+
     /// Destroys the player.
     #[instrument]
-    pub async fn destroy(&mut self) -> JoinResult<()> {
+    pub async fn destroy(&mut self) -> Result<(), ConnectionError> {
         info!("Destroying player");
+        self.update(None).await?;
         self.queue.clear();
-        self.call.remove_all_global_events();
-        self.call.leave().await
+        self.driver.remove_all_global_events();
+        self.driver.leave();
+        Ok(())
     }
 
     /// Pauses the currently playing track if available.
@@ -112,7 +126,7 @@ impl Player {
 
         PlayerModel {
             guild_id: self.guild_id.0,
-            channel_id: self.call.current_channel().map(|c| c.0),
+            channel_id: self.channel_id.map(|c| c.0),
             paused: self.paused,
             volume: self.volume,
             currently_playing: self.queue.current.as_ref().async_map(track).await,

@@ -12,7 +12,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 use crate::abort::Abort;
-use crate::api::model::gateway::{Incoming, Outgoing};
+use crate::api::model::gateway::Outgoing;
 use crate::api::session::Session;
 use crate::api::state::State;
 use crate::tri;

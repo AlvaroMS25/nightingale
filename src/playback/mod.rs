@@ -3,19 +3,16 @@ use dashmap::DashMap;
 use parking_lot::Mutex;
 use songbird::id::{ChannelId, GuildId, UserId};
 use songbird::{Call, Driver};
-use songbird::error::JoinResult;
+use songbird::error::{ConnectionError, JoinResult};
 use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::Mutex as AsyncMutex;
-use tracing::debug;
+use tracing::{debug, info};
 use events::EventsExt;
-use crate::api::model::nz::VoiceEvent;
 use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
 use crate::playback::player::handler::PlaybackHandler;
 use crate::playback::player::Player;
-use crate::playback::sharder::Sharder;
 
-pub mod sharder;
 pub mod metadata;
 pub mod events;
 pub mod player;
@@ -61,6 +58,8 @@ impl Playback {
             let mut player = Player::new(guild);
             player.register_events(s).await;
 
+            info!("Created player for guild {guild}");
+
             let player = Arc::new(AsyncMutex::new(player));
             PlaybackHandler::register(Arc::clone(&player)).await;
 
@@ -69,7 +68,7 @@ impl Playback {
         }
     }
 
-    pub async fn leave(&self, g: impl Into<GuildId>) -> JoinResult<()> {
+    pub async fn destroy_player(&self, g: impl Into<GuildId>) -> Result<(), ConnectionError> {
         let Some((_, call)) = self.players.remove(&g.into()) else {
             return Ok(())
         };
@@ -84,7 +83,7 @@ impl Playback {
             .collect::<Vec<_>>();
 
         for id in keys {
-            let _ = self.leave(id).await;
+            let _ = self.destroy_player(id).await;
         }
     }
 }
