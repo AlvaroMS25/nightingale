@@ -3,27 +3,6 @@ use std::num::NonZeroU64;
 use serde::{Deserialize, Deserializer};
 use serde::de::{Error, Unexpected, Visitor};
 
-/// Incoming voice events sent through the websocket by clients.
-pub enum VoiceEvent {
-    UpdateVoiceServer(UpdateVoiceServer),
-    UpdateVoiceState(UpdateVoiceState)
-}
-
-#[derive(Deserialize, Debug)]
-pub struct UpdateVoiceServer {
-    pub endpoint: Option<String>,
-    pub guild_id: NzU64,
-    pub token: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct UpdateVoiceState {
-    pub guild_id: Option<NzU64>,
-    pub user_id: NzU64,
-    pub session_id: String,
-    pub channel_id: Option<NzU64>
-}
-
 /// NonZeroU64 newtype struct that lets it deserialize from an integer or a string.
 pub struct NzU64(pub NonZeroU64);
 

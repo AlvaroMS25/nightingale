@@ -8,7 +8,7 @@ use songbird::shards::{GenericSharder, Shard};
 use tokio::sync::Mutex as AsyncMutex;
 use tracing::debug;
 use events::EventsExt;
-use crate::api::model::voice::VoiceEvent;
+use crate::api::model::nz::VoiceEvent;
 use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
 use crate::playback::player::handler::PlaybackHandler;

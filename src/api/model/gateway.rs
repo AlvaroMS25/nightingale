@@ -1,31 +1,6 @@
 use serde_json::Value;
 use crate::api::model::track::Track;
 use crate::api::model;
-use crate::api::model::voice::{UpdateVoiceServer, UpdateVoiceState, VoiceEvent};
-
-/// Possible incoming payloads from clients via websocket.
-#[derive(serde::Deserialize, Debug)]
-#[serde(tag = "op", content = "data")]
-#[serde(rename_all = "snake_case")]
-pub enum Incoming {
-    UpdateVoiceServer(UpdateVoiceServer),
-    UpdateVoiceState(UpdateVoiceState),
-}
-
-impl Incoming {
-    pub fn is_voice_event(&self) -> bool {
-        matches!(self, Incoming::UpdateVoiceState(_)) || matches!(self, Incoming::UpdateVoiceServer(_))
-    }
-}
-
-impl Into<VoiceEvent> for Incoming {
-    fn into(self) -> VoiceEvent {
-        match self {
-            Self::UpdateVoiceServer(update) => VoiceEvent::UpdateVoiceServer(update),
-            Self::UpdateVoiceState(state) => VoiceEvent::UpdateVoiceState(state),
-        }
-    }
-}
 
 /// Events sent via websocket to clients.
 #[non_exhaustive]

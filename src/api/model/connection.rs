@@ -1,7 +1,7 @@
 use std::num::NonZeroU64;
 use songbird::ConnectionInfo;
 use songbird::id::UserId;
-use crate::api::model::voice::NzU64;
+use crate::api::model::nz::NzU64;
 
 /// Possible `update_state` payloads.
 #[non_exhaustive]
