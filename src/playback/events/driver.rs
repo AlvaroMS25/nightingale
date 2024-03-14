@@ -14,7 +14,7 @@ pub struct DriverEvents {
 
 impl DriverEvents {
     pub async fn new(session: Arc<Session>) -> Self {
-        let sender = session.playback.sharder.sender.clone();
+        let sender = session.playback.sender.clone();
 
         Self {
             session,
