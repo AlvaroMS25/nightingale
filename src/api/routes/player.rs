@@ -30,27 +30,27 @@ pub async fn info(PlayerExtractor {player, ..}: PlayerExtractor) -> Json<Player>
 /// Tries to connect to the provided channel, this route returns a response immediately,
 /// and should not be considered connected until the corresponding `update_state` event is received
 /// by the client.
-pub async fn connect(
+pub async fn update(
     SessionWithGuildExtractor {session, guild}: SessionWithGuildExtractor,
+    body: Option<Json<DeserializableConnectionInfo>>
 ) -> impl IntoResponse {
     info!("Incoming connection request");
-    session.playback.get_or_create(guild, Arc::clone(&session)).await;
+    let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .body(Body::empty())
-        .unwrap()
-}
+    let info = body.map(|j| j.0.into_songbird(session.playback.user_id.0, guild));
 
-pub async fn disconnect(
-    SessionWithGuildExtractor{session, guild}: SessionWithGuildExtractor
-) -> impl IntoResponse {
-    let _ = session.playback.destroy_player(guild).await;
+    let mut lock = player.lock().await;
+    match lock.update(info).await {
+        Ok(_) => Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::empty())
+            .unwrap(),
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .body(Body::empty())
-        .unwrap()
+        Err(e) => Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(Body::from(format!(r#"{{"message": "{e}" }}"#)))
+            .unwrap()
+    }
 }
 
 pub async fn play(
@@ -150,13 +150,4 @@ pub async fn volume(
         .status(StatusCode::OK)
         .body(Body::empty())
         .unwrap())
-}
-
-pub async fn update(
-    PlayerExtractor { player, .. }: PlayerExtractor,
-    Json(body): Json<DeserializableConnectionInfo>
-) -> impl IntoResponse {
-
-
-    StatusCode::OK
 }
