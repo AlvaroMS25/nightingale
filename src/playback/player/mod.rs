@@ -77,7 +77,7 @@ impl Player {
 
     pub async fn update(&mut self, info: Option<ConnectionInfo>) -> Result<(), ConnectionError> {
         if let Some(info) = info {
-            self.channel_id = info.channel_id;
+            // The handler will update the channel field when events occur, so don't update it here
             self.driver.connect(info).await
         } else {
             self.driver.leave();

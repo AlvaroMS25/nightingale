@@ -10,7 +10,7 @@ use tracing::{debug, info};
 use events::EventsExt;
 use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
-use crate::playback::player::handler::PlaybackHandler;
+use crate::playback::player::handler::PlayerHandler;
 use crate::playback::player::Player;
 
 pub mod metadata;
@@ -61,7 +61,7 @@ impl Playback {
             info!("Created player for guild {guild}");
 
             let player = Arc::new(AsyncMutex::new(player));
-            PlaybackHandler::register(Arc::clone(&player)).await;
+            PlayerHandler::register(Arc::clone(&player)).await;
 
             self.players.insert(guild, Arc::clone(&player));
             player
