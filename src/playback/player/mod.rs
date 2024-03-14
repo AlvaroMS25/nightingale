@@ -30,6 +30,8 @@ pub struct Player {
     pub paused: bool
 }
 
+unsafe impl Send for Player {}
+
 impl Player {
     pub fn new(guild_id: GuildId) -> Self {
         Self {
