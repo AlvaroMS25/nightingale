@@ -2,6 +2,7 @@ use std::fmt;
 use std::num::NonZeroU64;
 use serde::{Deserialize, Deserializer};
 use serde::de::{Error, Unexpected, Visitor};
+use songbird::id::{ChannelId, GuildId};
 
 /// NonZeroU64 newtype struct that lets it deserialize from an integer or a string.
 pub struct NzU64(pub NonZeroU64);
@@ -48,5 +49,17 @@ impl<'de> Visitor<'de> for NzU64Visitor {
 
     fn visit_newtype_struct<D: Deserializer<'de>>(self, deserializer: D) -> Result<Self::Value, D::Error> {
         deserializer.deserialize_any(NzU64Visitor)
+    }
+}
+
+impl Into<ChannelId> for NzU64 {
+    fn into(self) -> ChannelId {
+        self.0.into()
+    }
+}
+
+impl Into<GuildId> for NzU64 {
+    fn into(self) -> GuildId {
+        self.0.into()
     }
 }
