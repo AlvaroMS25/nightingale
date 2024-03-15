@@ -9,7 +9,7 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use songbird::input::{AuxMetadata, Compose, Input, YoutubeDl};
 use songbird::tracks::TrackHandle;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 
 use crate::api::extractors::player::PlayerExtractor;
@@ -35,22 +35,22 @@ pub async fn update(
     body: Option<Json<DeserializableConnectionInfo>>
 ) -> impl IntoResponse {
     info!("Incoming connection request");
-    let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
+    tokio::spawn(async move {
+        let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
 
-    let info = body.map(|j| j.0.into_songbird(session.playback.user_id.0, guild));
+        let info = body.map(|j| j.0.into_songbird(session.playback.user_id.0, guild));
 
-    let mut lock = player.lock().await;
-    match lock.update(info).await {
-        Ok(_) => Response::builder()
-            .status(StatusCode::OK)
-            .body(Body::empty())
-            .unwrap(),
+        let mut lock = player.lock().await;
 
-        Err(e) => Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body(Body::from(format!(r#"{{"message": "{e}" }}"#)))
-            .unwrap()
-    }
+        if let Err(why) = lock.update(info).await {
+            error!("Failed to leave voice channel, error: {why}");
+        }
+    });
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::empty())
+        .unwrap()
 }
 
 pub async fn play(
