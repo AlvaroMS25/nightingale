@@ -12,7 +12,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 use crate::abort::Abort;
-use crate::api::model::gateway::{Incoming, Outgoing};
+use crate::api::model::gateway::Outgoing;
 use crate::api::session::Session;
 use crate::api::state::State;
 use crate::tri;
@@ -23,9 +23,6 @@ use crate::channel::Receiver;
 /// Query used on [`connect`].
 #[derive(serde::Deserialize)]
 pub struct ConnectQuery {
-    /// Number of shards the client has, needed to properly
-    /// forward messages through discord's gateway.
-    pub shards: u64,
     /// The user id of the client.
     pub user_id: NonZeroU64
 }
@@ -39,7 +36,7 @@ pub async fn connect(
     let id = state.generate_uuid();
 
     // Create new session.
-    state.instances.insert(id, Arc::new(Session::new(id, options.shards, options.user_id)));
+    state.instances.insert(id, Arc::new(Session::new(id, options.user_id)));
 
     ws.on_upgrade(move |ws| initialize_websocket(state, ws, id, false))
 }
@@ -153,19 +150,15 @@ impl WebSocketHandler<'_> {
                     self.send(msg).await;
                 },
                 Some(msg) = self.socket.next() => {
-                    self.handle_possible_error(msg).await;
+                    self.handle_message(msg).await;
                 }
             }
         }
     }
 
-    async fn handle_possible_error(&mut self, msg: Result<Message, Error>) {
+    async fn handle_message(&mut self, msg: Result<Message, Error>) {
         match msg {
             Ok(msg) => match msg {
-                Message::Text(msg) => match serde_json::from_str::<Incoming>(&msg) {
-                    Err(error) => tracing::error!("Invalid payload received, error: {error}"),
-                    Ok(incoming) => self.handle_message(incoming).await
-                },
                 Message::Close(frame) => {
                     info!("Close message received, frame: {frame:?}");
                     self.abort.abort()
@@ -179,20 +172,6 @@ impl WebSocketHandler<'_> {
                 warn!("Error occurred during connection: {error}");
                 self.abort.abort();
             }
-        }
-    }
-
-    async fn handle_message(&mut self, msg: Incoming) {
-        debug!("Received message: {msg:?}");
-        if msg.is_voice_event() {
-            debug!("Received a voice event");
-            self.session.playback.process_event(msg.into()).await;
-            return;
-        }
-
-        // Other messages besides voice ones are not currently supported
-        match msg {
-            _ => {}
         }
     }
 

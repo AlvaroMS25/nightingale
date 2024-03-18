@@ -9,11 +9,12 @@ use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use songbird::input::{AuxMetadata, Compose, Input, YoutubeDl};
 use songbird::tracks::TrackHandle;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 
 use crate::api::extractors::player::PlayerExtractor;
 use crate::api::extractors::session::{SessionExtractor, SessionWithGuildExtractor};
+use crate::api::model::connection::DeserializableConnectionInfo;
 use crate::api::model::play::{PlayOptions, PlaySource};
 use crate::api::model::player::Player;
 use crate::api::model::track::Track;
@@ -26,44 +27,30 @@ pub async fn info(PlayerExtractor {player, ..}: PlayerExtractor) -> Json<Player>
     Json(player.lock().await.as_json().await)
 }
 
-/// Query used on [`connect`], since the route uses a [`SessionExtractor`], this is not
-// /// the whole needed query.
-#[derive(Deserialize)]
-pub struct ConnectQuery {
-    channel_id: NonZeroU64
-}
-
 /// Tries to connect to the provided channel, this route returns a response immediately,
 /// and should not be considered connected until the corresponding `update_state` event is received
 /// by the client.
-pub async fn connect(
+pub async fn update(
     SessionWithGuildExtractor {session, guild}: SessionWithGuildExtractor,
-    Query(query): Query<ConnectQuery>
+    body: Option<Json<DeserializableConnectionInfo>>
 ) -> impl IntoResponse {
     info!("Incoming connection request");
-    tokio::spawn(async move {
+    let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
 
-        match session.playback.join(guild, query.channel_id, Arc::clone(&session)).await {
-            Ok(_) => {
-                info!("Connecting voice on guild {} and channel id {}", guild, query.channel_id);
-            },
-            Err(error) => {
-                warn!("An error occurred when connecting voice on guild {}, error: {}", guild, error);
-                let _ = session.playback.leave(guild).await;
-            }
-        }
-    });
+    let info = body.map(|j| j.0.into_songbird(session.playback.user_id.0, guild));
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .body(Body::empty())
-        .unwrap()
-}
+    let mut lock = player.lock().await;
 
-pub async fn disconnect(
-    SessionWithGuildExtractor{session, guild}: SessionWithGuildExtractor
-) -> impl IntoResponse {
-    let _ = session.playback.leave(guild).await;
+    if let Err(e) = lock.update(info).await {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                super::super::APPLICATION_JSON
+            )
+            .body(Body::from(format!(r#"{{ "message": "{e}" }}"#)))
+            .unwrap()
+    }
 
     Response::builder()
         .status(StatusCode::OK)
