@@ -35,17 +35,22 @@ pub async fn update(
     body: Option<Json<DeserializableConnectionInfo>>
 ) -> impl IntoResponse {
     info!("Incoming connection request");
-    tokio::spawn(async move {
-        let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
+    let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
 
-        let info = body.map(|j| j.0.into_songbird(session.playback.user_id.0, guild));
+    let info = body.map(|j| j.0.into_songbird(session.playback.user_id.0, guild));
 
-        let mut lock = player.lock().await;
+    let mut lock = player.lock().await;
 
-        if let Err(why) = lock.update(info).await {
-            error!("Failed to leave voice channel, error: {why}");
-        }
-    });
+    if let Err(e) = lock.update(info).await {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                super::super::APPLICATION_JSON
+            )
+            .body(Body::from(format!(r#"{{ "message": "{e}" }}"#)))
+            .unwrap()
+    }
 
     Response::builder()
         .status(StatusCode::OK)
