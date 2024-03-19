@@ -1,13 +1,15 @@
 use std::num::NonZeroU64;
 use std::sync::Arc;
+use std::time::Duration;
 use axum::body::Body;
 use axum::extract::{Path, Query};
 use axum::http::StatusCode;
 use axum::extract::State as AxumState;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
+use rusty_ytdl::Video;
 use serde::Deserialize;
-use songbird::input::{AuxMetadata, Compose, Input, YoutubeDl};
+use songbird::input::{AuxMetadata, Compose, HttpRequest, Input, YoutubeDl};
 use songbird::tracks::TrackHandle;
 use tracing::{error, info, warn};
 use uuid::Uuid;
@@ -68,6 +70,44 @@ pub async fn play(
         PlaySource::Bytes {track, bytes} => {
             (bytes.into(), TrackMetadata {
                 metadata: track.into(),
+                guild: guild.get()
+            })
+        },
+        PlaySource::Rytdlp(link) => {
+            use rusty_ytdl::Video;
+
+            let v = Video::new(link).unwrap();
+            let mut info = v.get_info().await.unwrap();
+            let details = info.video_details;
+            let format = info.formats.get(0).unwrap();
+
+            let metadata = AuxMetadata {
+                track: Some(details.title.clone()),
+                artist: details.author.as_ref().map(|s|s.name.clone()),
+                album: None,
+                date: Some(details.publish_date),
+                channels: format.audio_channels,
+                channel: details.author.as_ref().map(|s| s.channel_url.clone()),
+                start_time: None,
+                duration: Some(Duration::from_secs(details.length_seconds.parse().unwrap())),
+                sample_rate: format.audio_sample_rate.as_ref().map(|s| s.parse().unwrap()),
+                source_url: Some(details.video_url),
+                title: Some(details.title),
+                thumbnail: details.thumbnails.get(0).map(|t| t.url.clone())
+            };
+
+            let format = rusty_ytdl::choose_format(
+                info.formats.as_slice(),
+                &rusty_ytdl::VideoOptions {
+                    quality: rusty_ytdl::VideoQuality::HighestAudio,
+                    filter: rusty_ytdl::VideoSearchOptions::Audio,
+                    ..Default::default()
+                }
+            ).unwrap();
+            let req = HttpRequest::new(state.http.clone(), format.url);
+
+            (req.into(), TrackMetadata {
+                metadata,
                 guild: guild.get()
             })
         },

@@ -8,6 +8,7 @@ use crate::api::model::track::Track;
 pub enum PlaySource {
     /// Provided by link, `yt-dlp` must support the provided source.
     Link(String),
+    Rytdlp(String),
     /// Provided the whole track in bytes, ready to play without querying any more information.
     Bytes {
         track: Track,
