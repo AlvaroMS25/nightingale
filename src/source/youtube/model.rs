@@ -1,6 +1,11 @@
+use std::mem::take;
+use std::time::Duration;
 use rusty_ytdl::search::{Playlist, Video};
+use rusty_ytdl::{VideoDetails, VideoFormat, VideoInfo};
 use serde::Serialize;
+use songbird::input::AuxMetadata;
 use crate::ext::VecExt;
+use crate::source::StringError;
 
 #[derive(Serialize)]
 pub struct YoutubeTrack {
@@ -53,5 +58,33 @@ impl From<Playlist> for YoutubePlaylist {
             thumbnail: playlist.thumbnails.remove_optional(0).map(|p| p.url.clone()),
             tracks: playlist.videos.into_iter().map(Into::into).collect()
         }
+    }
+}
+
+pub(super) struct WrapInfo(pub VideoDetails, pub VideoFormat);
+
+impl TryFrom<WrapInfo> for AuxMetadata {
+    type Error = StringError;
+
+    fn try_from(value: WrapInfo) -> Result<Self, Self::Error> {
+        use std::mem::take;
+
+        let mut details = value.0;
+        let format = value.1;
+
+        Ok(AuxMetadata {
+            track: None,
+            artist: details.author.as_mut().map(|a| take(&mut a.name)),
+            album: None,
+            date: Some(details.publish_date),
+            channels: format.audio_channels,
+            channel: details.author.as_mut().map(|a| take(&mut a.channel_url)),
+            start_time: None,
+            duration: Some(Duration::from_secs(details.length_seconds.parse()?)),
+            sample_rate: format.audio_sample_rate.as_ref().map(|s| s.parse()).transpose()?,
+            source_url: Some(details.video_url),
+            title: Some(details.title),
+            thumbnail: details.thumbnails.remove_optional(0).map(|t| t.url)
+        })
     }
 }

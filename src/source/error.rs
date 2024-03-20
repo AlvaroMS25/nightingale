@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
-use songbird::input::AuxMetadata;
+use axum::body::Body;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 
 pub struct StringError(String);
 
@@ -19,5 +21,18 @@ impl Debug for StringError {
 impl Display for StringError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         <String as Display>::fmt(&self.0, f)
+    }
+}
+
+impl IntoResponse for StringError {
+    fn into_response(self) -> Response {
+        Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                "application/json"
+            )
+            .body(Body::from(format!(r#"{{ "message": "{self}" }}"#)))
+            .unwrap()
     }
 }

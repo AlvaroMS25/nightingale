@@ -1,6 +1,6 @@
 mod error;
 
-use songbird::input::AuxMetadata;
+use songbird::input::{AuxMetadata, Input};
 pub use error::StringError;
 
 pub mod yt;
@@ -19,6 +19,12 @@ impl Search {
     }
 }
 
+pub struct Playable {
+    input: Input,
+    meta: AuxMetadata
+}
+
+#[async_trait::async_trait]
 pub trait SourcePlayer {
-    async fn play_url(_url: String) -> Result<AuxMetadata, StringError>;
+    async fn play_url(&self, _url: String) -> Result<Playable, StringError>;
 }

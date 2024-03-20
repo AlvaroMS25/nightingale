@@ -3,9 +3,10 @@ pub mod model;
 use reqwest::Client;
 use rusty_ytdl as ytdl;
 use rusty_ytdl::{RequestOptions, VideoOptions, VideoQuality, VideoSearchOptions};
-use rusty_ytdl::search::{SearchResult, SearchType};
+use rusty_ytdl::search::{SearchOptions, SearchResult, SearchType};
 use serde::Serialize;
-use crate::source::StringError;
+use songbird::input::{AuxMetadata, HttpRequest};
+use crate::source::{Playable, SourcePlayer, StringError};
 use ytdl::search::YouTube as RustyYoutube;
 use model::*;
 
@@ -13,24 +14,26 @@ pub struct Youtube {
     search: RustyYoutube,
     video_options: VideoOptions,
     request_options: RequestOptions,
+    http: Client
 }
 
 impl Youtube {
-    pub fn new(http: Client) -> Result<Self, StringError> {
+    pub fn new(http: Client) -> Self {
         let request_options = RequestOptions {
-            client: Some(http),
+            client: Some(http.clone()),
             ..Default::default()
         };
 
-        Ok(Self {
-            search: RustyYoutube::new_with_options(&request_options)?,
+        Self {
+            search: RustyYoutube::new_with_options(&request_options).unwrap(), // can't fail
             video_options: VideoOptions {
                 quality: VideoQuality::HighestAudio,
                 filter: VideoSearchOptions::Audio,
                 ..Default::default()
             },
-            request_options
-        })
+            request_options,
+            http
+        }
     }
 
     pub async fn search_videos(
@@ -57,9 +60,8 @@ impl Youtube {
     }
 
     pub async fn search_video(&self, query: String) -> Result<Option<YoutubeTrack>, StringError> {
-        Ok(self.search.search_one(query, Some(&ytdl::search::SearchOptions {
+        Ok(self.search.search_one(query, Some(&SearchOptions {
             search_type: SearchType::Video,
-            safe_search: false,
             ..Default::default()
         }))
             .await?
@@ -70,5 +72,40 @@ impl Youtube {
                     None
                 }
             }))
+    }
+
+    pub async fn playlist(&self, playlist: String) -> Result<Option<YoutubePlaylist>, StringError> {
+        Ok(self.search.search_one(playlist, Some(&SearchOptions {
+            search_type: SearchType::Playlist,
+            ..Default::default()
+        }))
+            .await?
+            .and_then(|res| {
+                if let SearchResult::Playlist(p) = res {
+                    Some(p.into())
+                } else {
+                    None
+                }
+            }))
+    }
+}
+
+#[async_trait::async_trait]
+impl SourcePlayer for Youtube {
+    async fn play_url(&self, url: String) -> Result<Playable, StringError> {
+        let video = ytdl::Video::new_with_options(url, self.video_options.clone())?;
+        let info = video.get_info().await?;
+
+        let mut format = ytdl::choose_format(info.formats.as_slice(), &self.video_options)?;
+        let url = std::mem::take(&mut format.url); // only used to create input
+
+        let meta = AuxMetadata::try_from(WrapInfo(info.video_details, format))?;
+
+        let req = HttpRequest::new(self.http.clone(), url);
+
+        Ok(Playable {
+            input: req.into(),
+            meta
+        })
     }
 }
