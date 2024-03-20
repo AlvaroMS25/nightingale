@@ -5,8 +5,8 @@ use axum::Json;
 use axum::response::Response;
 use serde::Deserialize;
 use crate::api::state::State;
-use crate::search::youtube::playlist::YoutubePlaylist;
-use crate::search::youtube::track::YoutubeTrack;
+use crate::source::yt::playlist::YoutubePlaylist;
+use crate::source::yt::track::YoutubeTrack;
 use crate::api::APPLICATION_JSON;
 
 /// Query used on [`search`] route.

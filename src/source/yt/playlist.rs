@@ -1,8 +1,8 @@
 use std::time::Duration;
 use serde::Serialize;
 use serde_json::Value;
-use crate::search::youtube::{get_thumbnail, WATCH_URL_PREFIX};
-use crate::search::youtube::track::YoutubeTrack;
+use crate::source::yt::{get_thumbnail, WATCH_URL_PREFIX};
+use crate::source::yt::track::YoutubeTrack;
 
 #[derive(Serialize)]
 pub struct YoutubePlaylist {

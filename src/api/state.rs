@@ -4,7 +4,7 @@ use dashmap::DashMap;
 use sysinfo::{Pid, System};
 use uuid::Uuid;
 use crate::api::session::Session;
-use crate::search::Search;
+use crate::source::Search;
 
 /// The state shared throughout requests.
 #[derive(Clone)]

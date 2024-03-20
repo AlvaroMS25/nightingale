@@ -7,8 +7,8 @@ use std::time::Duration;
 use const_format::concatcp;
 use reqwest::Client;
 use serde_json::{json, Value};
-use crate::search::youtube::playlist::YoutubePlaylist;
-use crate::search::youtube::track::YoutubeTrack;
+use crate::source::yt::playlist::YoutubePlaylist;
+use crate::source::yt::track::YoutubeTrack;
 
 const CLIENT_ANDROID_NAME: &str = "ANDROID";
 const CLIENT_ANDROID_VERSION: &str = "18.06.35";

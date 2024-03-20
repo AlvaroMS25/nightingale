@@ -99,3 +99,17 @@ pub trait AsyncIteratorExt: Iterator + Sized {
 }
 
 impl<I> AsyncIteratorExt for I where I: Iterator {}
+
+pub trait VecExt<T> {
+    fn remove_optional(&mut self, _idx: usize) -> Option<T>;
+}
+
+impl<T> VecExt<T> for Vec<T> {
+    fn remove_optional(&mut self, idx: usize) -> Option<T> {
+        if self.len() > idx {
+            Some(self.remove(idx))
+        } else {
+            None
+        }
+    }
+}
