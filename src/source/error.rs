@@ -4,30 +4,47 @@ use axum::body::Body;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 
-pub struct IntoResponseError(String);
+pub struct IntoResponseError {
+    msg: String,
+    status: StatusCode
+}
+
+impl IntoResponseError {
+    pub fn new(msg: impl ToString) -> Self {
+        Self {
+            msg: msg.to_string(),
+            status: StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+
+    pub fn with_status(mut self, status: StatusCode) -> Self {
+        self.status = status;
+        self
+    }
+}
 
 impl<T: Error> From<T> for IntoResponseError {
     fn from(value: T) -> Self {
-        Self(value.to_string())
+        Self::new(value)
     }
 }
 
 impl Debug for IntoResponseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        <String as Debug>::fmt(&self.0, f)
+        <String as Debug>::fmt(&self.msg, f)
     }
 }
 
 impl Display for IntoResponseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        <String as Display>::fmt(&self.0, f)
+        <String as Display>::fmt(&self.msg, f)
     }
 }
 
 impl IntoResponse for IntoResponseError {
     fn into_response(self) -> Response {
         Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .status(self.status)
             .header(
                 axum::http::header::CONTENT_TYPE,
                 "application/json"

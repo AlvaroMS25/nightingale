@@ -14,6 +14,7 @@ impl HttpSource {
     }
 }
 
+#[async_trait::async_trait]
 impl SourcePlayer for HttpSource {
     async fn play_url(&self, url: String) -> Result<Playable, IntoResponseError> {
         Ok(Playable {

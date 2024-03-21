@@ -5,9 +5,8 @@ use axum::Json;
 use axum::response::Response;
 use serde::Deserialize;
 use crate::api::state::State;
-use crate::source::yt::playlist::YoutubePlaylist;
-use crate::source::yt::track::YoutubeTrack;
 use crate::api::APPLICATION_JSON;
+use crate::source::youtube::model::{YoutubePlaylist, YoutubeTrack};
 
 /// Query used on [`search`] route.
 #[derive(Deserialize)]
@@ -20,7 +19,7 @@ pub async fn search(
     AxumState(state): AxumState<State>,
     Query(query): Query<SearchQuery>
 ) -> Result<Json<Vec<YoutubeTrack>>, Response> {
-    match state.search.youtube.search_tracks(query.query).await {
+    match state.sources.youtube.search_videos(query.query, 15).await {
         Ok(tracks) => Ok(Json(tracks)),
         Err(e) => Err(Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
@@ -45,7 +44,7 @@ pub async fn playlist(
     AxumState(state): AxumState<State>,
     Query(query): Query<PlaylistQuery>
 ) -> Result<Json<YoutubePlaylist>, Response> {
-    match state.search.youtube.get_playlist(query.playlist_id).await {
+    match state.sources.youtube.playlist(query.playlist_id).await {
         Ok(playlist) => Ok(Json(playlist)),
         Err(e) => Err(Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)

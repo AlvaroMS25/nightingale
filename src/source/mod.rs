@@ -1,22 +1,28 @@
 mod error;
 
+use reqwest::Client;
 use songbird::input::{AuxMetadata, Input};
 pub use error::IntoResponseError;
+use crate::source::http::HttpSource;
+use crate::source::youtube::Youtube;
+use crate::source::ytdlp::Ytdlp;
 
-pub mod yt;
-mod youtube;
-mod ytdlp;
-mod http;
+pub mod youtube;
+pub mod ytdlp;
+pub mod http;
 
-/// Helper that stores available search sources.
-pub struct Search {
-    pub youtube: yt::YoutubeSearch
+pub struct Sources {
+    pub youtube: Youtube,
+    pub yt_dlp: Ytdlp,
+    pub http: HttpSource
 }
 
-impl Search {
-    pub fn new() -> Self {
+impl Sources {
+    pub fn new(http: Client) -> Self {
         Self {
-            youtube: yt::YoutubeSearch::new()
+            youtube: Youtube::new(http.clone()),
+            yt_dlp: Ytdlp::new(http.clone()),
+            http: HttpSource::new(http)
         }
     }
 }

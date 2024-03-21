@@ -4,7 +4,7 @@ use dashmap::DashMap;
 use sysinfo::{Pid, System};
 use uuid::Uuid;
 use crate::api::session::Session;
-use crate::source::Search;
+use crate::source::Sources;
 
 /// The state shared throughout requests.
 #[derive(Clone)]
@@ -33,18 +33,19 @@ pub struct Inner {
     pub system: Mutex<System>,
     /// The Pid of the server.
     pub pid: Pid,
-    /// Search sources supported by nightingale.
-    pub search: Search
+    /// Url sources supported by nightingale.
+    pub sources: Sources
 }
 
 impl Inner {
     fn new() -> Self {
+        let http = reqwest::Client::new();
         Self {
-            http: reqwest::Client::new(),
+            http: http.clone(),
             instances: Default::default(),
             system: Mutex::new(System::new_all()),
             pid: Pid::from_u32(std::process::id()),
-            search: Search::new()
+            sources: Sources::new(http)
         }
     }
 

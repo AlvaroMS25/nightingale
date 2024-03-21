@@ -14,6 +14,7 @@ impl Ytdlp {
     }
 }
 
+#[async_trait::async_trait]
 impl SourcePlayer for Ytdlp {
     async fn play_url(&self, url: String) -> Result<Playable, IntoResponseError> {
         let mut ydl = YoutubeDl::new(self.http.clone(), url);
