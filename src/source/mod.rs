@@ -1,6 +1,7 @@
 use reqwest::Client;
 use songbird::input::{AuxMetadata, Input};
 use crate::api::error::IntoResponseError;
+use crate::api::model::play::PlaySource;
 use crate::source::http::HttpSource;
 use crate::source::youtube::Youtube;
 use crate::source::ytdlp::Ytdlp;
@@ -23,11 +24,25 @@ impl Sources {
             http: HttpSource::new(http)
         }
     }
+
+    pub fn source_for(&self, source: &PlaySource) -> &dyn SourcePlayer {
+        match source {
+            PlaySource::Link { force_ytdlp, link } => {
+                if *force_ytdlp || !self.youtube.can_play(link.as_str()) {
+                    &self.yt_dlp
+                } else {
+                    &self.youtube
+                }
+            },
+            PlaySource::Http {..} => &self.http,
+            _ => unreachable!()
+        }
+    }
 }
 
 pub struct Playable {
-    input: Input,
-    meta: AuxMetadata
+    pub input: Input,
+    pub meta: AuxMetadata
 }
 
 /// Represents players that can play from an internet URL.

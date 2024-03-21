@@ -7,12 +7,28 @@ use crate::api::model::track::Track;
 #[serde(rename_all = "snake_case")]
 pub enum PlaySource {
     /// Provided by link, `yt-dlp` must support the provided source.
-    Link(String),
-    Rytdlp(String),
+    Link {
+        #[serde(default)]
+        force_ytdlp: bool,
+        link: String
+    },
+    Http {
+        track: Track,
+        link: String
+    },
     /// Provided the whole track in bytes, ready to play without querying any more information.
     Bytes {
         track: Track,
         bytes: Vec<u8>
+    }
+}
+
+impl PlaySource {
+    pub fn into_inner(self) -> (String, Option<Track>) {
+        match self {
+            Self::Link { link, .. } => (link, None),
+            _ => unreachable!()
+        }
     }
 }
 

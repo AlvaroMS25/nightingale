@@ -1,5 +1,6 @@
 pub mod model;
 
+use regex::Regex;
 use reqwest::Client;
 use rusty_ytdl as ytdl;
 use rusty_ytdl::{RequestOptions, VideoOptions, VideoQuality, VideoSearchOptions};
@@ -15,7 +16,7 @@ pub struct Youtube {
     video_options: VideoOptions,
     request_options: RequestOptions,
     http: Client,
-
+    regexes: Box<[Regex]> // We use a boxed slice to add more regexes if needed later
 }
 
 impl Youtube {
@@ -33,8 +34,21 @@ impl Youtube {
                 ..Default::default()
             },
             request_options,
-            http
+            http,
+            regexes: vec![
+                Regex::new(r#"^((?:https?:)?\/\/)?((?:www|m|music)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"#).unwrap(),
+            ].into_boxed_slice()
         }
+    }
+
+    pub fn can_play(&self, url: &str) -> bool {
+        for regex in self.regexes.iter() {
+            if regex.is_match(url) {
+                return true;
+            }
+        }
+
+        false
     }
 
     pub async fn search_videos(

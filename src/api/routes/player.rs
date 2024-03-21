@@ -67,52 +67,17 @@ pub async fn play(
                 guild: guild.get()
             })
         },
-        PlaySource::Rytdlp(link) => {
-            use rusty_ytdl::Video;
+        other => {
+            let source = state.sources.source_for(&other);
+            let (url, track) = other.into_inner();
 
-            let v = Video::new(link).unwrap();
-            let mut info = v.get_info().await.unwrap();
-            let details = info.video_details;
-            let format = info.formats.get(0).unwrap();
+            let mut playable = source.play_url(url).await?;
 
-            let metadata = AuxMetadata {
-                track: Some(details.title.clone()),
-                artist: details.author.as_ref().map(|s|s.name.clone()),
-                album: None,
-                date: Some(details.publish_date),
-                channels: format.audio_channels,
-                channel: details.author.as_ref().map(|s| s.channel_url.clone()),
-                start_time: None,
-                duration: Some(Duration::from_secs(details.length_seconds.parse().unwrap())),
-                sample_rate: format.audio_sample_rate.as_ref().map(|s| s.parse().unwrap()),
-                source_url: Some(details.video_url),
-                title: Some(details.title),
-                thumbnail: details.thumbnails.get(0).map(|t| t.url.clone())
-            };
+            if let Some(t) = track {
+                playable.meta = t.into();
+            }
 
-            let format = rusty_ytdl::choose_format(
-                info.formats.as_slice(),
-                &rusty_ytdl::VideoOptions {
-                    quality: rusty_ytdl::VideoQuality::HighestAudio,
-                    filter: rusty_ytdl::VideoSearchOptions::Audio,
-                    ..Default::default()
-                }
-            ).unwrap();
-            let req = HttpRequest::new(state.http.clone(), format.url);
-
-            (req.into(), TrackMetadata {
-                metadata,
-                guild: guild.get()
-            })
-        },
-        PlaySource::Link(link) => {
-            let mut ytdl = YoutubeDl::new(state.http.clone(), link);
-
-            let metadata = ytdl.aux_metadata().await?;
-            (ytdl.into(), TrackMetadata {
-                metadata,
-                guild: guild.get()
-            })
+            (playable.input, TrackMetadata { metadata: playable.meta, guild: guild.get() })
         }
     };
 
