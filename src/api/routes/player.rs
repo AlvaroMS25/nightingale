@@ -13,6 +13,7 @@ use songbird::input::{AuxMetadata, Compose, HttpRequest, Input, YoutubeDl};
 use songbird::tracks::TrackHandle;
 use tracing::{error, info, warn};
 use uuid::Uuid;
+use crate::api::error::IntoResponseError;
 
 use crate::api::extractors::player::PlayerExtractor;
 use crate::api::extractors::session::{SessionExtractor, SessionWithGuildExtractor};
@@ -35,7 +36,7 @@ pub async fn info(PlayerExtractor {player, ..}: PlayerExtractor) -> Json<Player>
 pub async fn update(
     SessionWithGuildExtractor {session, guild}: SessionWithGuildExtractor,
     body: Option<Json<DeserializableConnectionInfo>>
-) -> impl IntoResponse {
+) -> Result<Response, IntoResponseError> {
     info!("Incoming connection request");
     let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
 
@@ -44,27 +45,20 @@ pub async fn update(
     let mut lock = player.lock().await;
 
     if let Err(e) = lock.update(info).await {
-        return Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .header(
-                axum::http::header::CONTENT_TYPE,
-                super::super::APPLICATION_JSON
-            )
-            .body(Body::from(format!(r#"{{ "message": "{e}" }}"#)))
-            .unwrap()
+        return Err(IntoResponseError::new(e));
     }
 
-    Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .body(Body::empty())
-        .unwrap()
+        .unwrap())
 }
 
 pub async fn play(
     AxumState(state): AxumState<State>,
     PlayerExtractor {player, guild}: PlayerExtractor,
     Json(options): Json<PlayOptions>
-) -> impl IntoResponse {
+) -> Result<Json<Track>, IntoResponseError> {
     info!("Received play request");
     let (source, metadata): (Input, _) = match options.source {
         PlaySource::Bytes {track, bytes} => {
@@ -114,19 +108,7 @@ pub async fn play(
         PlaySource::Link(link) => {
             let mut ytdl = YoutubeDl::new(state.http.clone(), link);
 
-            let metadata = match ytdl.aux_metadata().await {
-                Ok(m) => m,
-                Err(e) => {
-                    return Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
-                        .header(
-                            axum::http::header::CONTENT_TYPE,
-                            super::super::APPLICATION_JSON
-                        )
-                        .body(Body::from(format!(r#"{{"message": "{e}"}}"#)))
-                        .unwrap();
-                }
-            };
+            let metadata = ytdl.aux_metadata().await?;
             (ytdl.into(), TrackMetadata {
                 metadata,
                 guild: guild.get()
@@ -134,17 +116,7 @@ pub async fn play(
         }
     };
 
-    let Ok(serialized) = serde_json::to_string(&metadata.track()) else {
-        return Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .header(
-                axum::http::header::CONTENT_TYPE,
-                super::super::APPLICATION_JSON
-            )
-            .body(Body::from(r#"{"message": "Failed to serialize track"}"#))
-            .unwrap();
-    };
-
+    let track = metadata.track();
     if options.force_play {
         player.lock().await.play_now(source, metadata).await;
     } else {
@@ -152,14 +124,7 @@ pub async fn play(
     }
 
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(
-            axum::http::header::CONTENT_TYPE,
-            super::super::APPLICATION_JSON
-        )
-        .body(Body::from(serialized))
-        .unwrap()
+    Ok(Json(track))
 }
 
 /// Pauses the provided player.
@@ -187,7 +152,7 @@ pub async fn resume(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoR
 pub async fn volume(
     AxumState(state): AxumState<State>,
     Path((session, guild, volume)): Path<(Uuid, NonZeroU64, u8)>
-) -> Result<Response, Response> {
+) -> Result<Response, IntoResponseError> {
     let PlayerExtractor { player, .. } = PlayerExtractor::from_id(session, &state, guild)?;
     player.lock().await.set_volume(volume);
 
