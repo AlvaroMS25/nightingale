@@ -6,7 +6,7 @@ use rusty_ytdl::{RequestOptions, VideoOptions, VideoQuality, VideoSearchOptions}
 use rusty_ytdl::search::{SearchOptions, SearchResult, SearchType};
 use serde::Serialize;
 use songbird::input::{AuxMetadata, HttpRequest};
-use crate::source::{Playable, SourcePlayer, StringError};
+use crate::source::{Playable, SourcePlayer, IntoResponseError};
 use ytdl::search::YouTube as RustyYoutube;
 use model::*;
 
@@ -14,7 +14,8 @@ pub struct Youtube {
     search: RustyYoutube,
     video_options: VideoOptions,
     request_options: RequestOptions,
-    http: Client
+    http: Client,
+
 }
 
 impl Youtube {
@@ -40,8 +41,8 @@ impl Youtube {
         &self,
         query: String,
         limit: u64
-    ) -> Result<Vec<YoutubeTrack>, StringError> {
-        Ok(self.search.search(query, Some(&ytdl::search::SearchOptions {
+    ) -> Result<Vec<YoutubeTrack>, IntoResponseError> {
+        Ok(self.search.search(query, Some(&SearchOptions {
             limit,
             search_type: SearchType::Video,
             safe_search: false
@@ -59,7 +60,7 @@ impl Youtube {
             .collect::<Vec<_>>())
     }
 
-    pub async fn search_video(&self, query: String) -> Result<Option<YoutubeTrack>, StringError> {
+    pub async fn search_video(&self, query: String) -> Result<Option<YoutubeTrack>, IntoResponseError> {
         Ok(self.search.search_one(query, Some(&SearchOptions {
             search_type: SearchType::Video,
             ..Default::default()
@@ -74,7 +75,7 @@ impl Youtube {
             }))
     }
 
-    pub async fn playlist(&self, playlist: String) -> Result<Option<YoutubePlaylist>, StringError> {
+    pub async fn playlist(&self, playlist: String) -> Result<Option<YoutubePlaylist>, IntoResponseError> {
         Ok(self.search.search_one(playlist, Some(&SearchOptions {
             search_type: SearchType::Playlist,
             ..Default::default()
@@ -92,7 +93,7 @@ impl Youtube {
 
 #[async_trait::async_trait]
 impl SourcePlayer for Youtube {
-    async fn play_url(&self, url: String) -> Result<Playable, StringError> {
+    async fn play_url(&self, url: String) -> Result<Playable, IntoResponseError> {
         let video = ytdl::Video::new_with_options(url, self.video_options.clone())?;
         let info = video.get_info().await?;
 

@@ -5,7 +5,7 @@ use rusty_ytdl::{VideoDetails, VideoFormat, VideoInfo};
 use serde::Serialize;
 use songbird::input::AuxMetadata;
 use crate::ext::VecExt;
-use crate::source::StringError;
+use crate::source::IntoResponseError;
 
 #[derive(Serialize)]
 pub struct YoutubeTrack {
@@ -64,7 +64,7 @@ impl From<Playlist> for YoutubePlaylist {
 pub(super) struct WrapInfo(pub VideoDetails, pub VideoFormat);
 
 impl TryFrom<WrapInfo> for AuxMetadata {
-    type Error = StringError;
+    type Error = IntoResponseError;
 
     fn try_from(value: WrapInfo) -> Result<Self, Self::Error> {
         use std::mem::take;

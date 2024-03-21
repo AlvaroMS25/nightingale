@@ -1,10 +1,12 @@
 mod error;
 
 use songbird::input::{AuxMetadata, Input};
-pub use error::StringError;
+pub use error::IntoResponseError;
 
 pub mod yt;
 mod youtube;
+mod ytdlp;
+mod http;
 
 /// Helper that stores available search sources.
 pub struct Search {
@@ -24,7 +26,8 @@ pub struct Playable {
     meta: AuxMetadata
 }
 
+/// Represents players that can play from an internet URL.
 #[async_trait::async_trait]
 pub trait SourcePlayer {
-    async fn play_url(&self, _url: String) -> Result<Playable, StringError>;
+    async fn play_url(&self, _url: String) -> Result<Playable, IntoResponseError>;
 }
