@@ -4,6 +4,8 @@ use axum::body::Body;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 
+/// Error type that implements [`IntoResponse`], so it can be used from within
+/// api routes directly.
 pub struct IntoResponseError {
     msg: String,
     status: StatusCode
