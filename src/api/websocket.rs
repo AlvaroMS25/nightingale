@@ -158,12 +158,11 @@ impl WebSocketHandler<'_> {
 
     async fn handle_message(&mut self, msg: Result<Message, Error>) {
         match msg {
-            Ok(msg) => match msg {
-                Message::Close(frame) => {
+            Ok(msg) => {
+                if let Message::Close(frame) = msg {
                     info!("Close message received, frame: {frame:?}");
                     self.abort.abort()
-                },
-                _ => {}
+                }
             },
             Err(error) => {
                 // this error is just a boxed tungstenite error.

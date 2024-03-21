@@ -22,6 +22,7 @@ pub enum Outgoing {
 
 /// Track related events.
 #[non_exhaustive]
+#[allow(clippy::enum_variant_names)]
 #[derive(serde::Serialize, Debug)]
 #[serde(tag = "type", content = "data")]
 #[serde(rename_all = "snake_case")]

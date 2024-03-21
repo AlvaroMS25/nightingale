@@ -35,14 +35,14 @@ pub struct YoutubePlaylist {
 }
 
 impl From<Video> for YoutubeTrack {
-    fn from(video: Video) -> Self {
+    fn from(mut video: Video) -> Self {
         YoutubeTrack {
             title: video.title,
             author: Some(video.channel.name),
             length: video.duration * 1000,
             video_id: video.id,
             url: video.url,
-            thumbnail: video.thumbnails.get(0).map(|t| t.url.clone())
+            thumbnail: video.thumbnails.remove_optional(0).map(|t| t.url)
         }
     }
 }
@@ -54,7 +54,7 @@ impl From<Playlist> for YoutubePlaylist {
             id: playlist.id,
             url: playlist.url,
             channel: playlist.channel.url,
-            thumbnail: playlist.thumbnails.remove_optional(0).map(|p| p.url.clone()),
+            thumbnail: playlist.thumbnails.remove_optional(0).map(|p| p.url),
             tracks: playlist.videos.into_iter().map(Into::into).collect()
         }
     }

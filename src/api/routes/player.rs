@@ -89,7 +89,7 @@ pub async fn play(
 
 /// Pauses the provided player.
 pub async fn pause(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoResponse {
-    let _ = player.lock().await.pause();
+    player.lock().await.pause();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -99,7 +99,7 @@ pub async fn pause(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoRe
 
 /// Resumes the provided player.
 pub async fn resume(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoResponse {
-    let _ = player.lock().await.resume();
+    player.lock().await.resume();
 
     Response::builder()
         .status(StatusCode::OK)

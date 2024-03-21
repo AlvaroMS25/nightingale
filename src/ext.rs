@@ -90,11 +90,11 @@ pub trait AsyncIteratorExt: Iterator + Sized {
     {
         let mut out = Vec::new();
 
-        while let Some(item) = self.next() {
+        for item in self {
             out.push(fun(item).await);
         }
 
-        Container::from_iter(out.into_iter())
+        Container::from_iter(out)
     }
 }
 

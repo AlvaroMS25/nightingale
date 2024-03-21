@@ -56,7 +56,7 @@ fn main() {
         .build()
         .unwrap();
 
-    if let Err(_) = which::which("yt-dlp") {
+    if which::which("yt-dlp").is_err() {
         error!("yt-dlp executable couldn't be found, please install it for Nightingale to work properly");
         return;
     }

@@ -86,7 +86,7 @@ impl Youtube {
     }
 
     pub async fn playlist(&self, playlist: String) -> Result<YoutubePlaylist, IntoResponseError> {
-        Ok(self.search.search_one(playlist, Some(&SearchOptions {
+        self.search.search_one(playlist, Some(&SearchOptions {
             search_type: SearchType::Playlist,
             ..Default::default()
         }))
@@ -98,8 +98,7 @@ impl Youtube {
                     None
                 }
             })
-            .ok_or_else(|| IntoResponseError::new("No playlist found"))?
-        )
+            .ok_or_else(|| IntoResponseError::new("No playlist found"))
     }
 }
 

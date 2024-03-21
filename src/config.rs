@@ -60,14 +60,14 @@ pub enum LoggingLevel {
     Trace
 }
 
-impl Into<Level> for LoggingLevel {
-    fn into(self) -> Level {
-        match self {
-            Self::Error => Level::ERROR,
-            Self::Warn => Level::WARN,
-            Self::Info => Level::INFO,
-            Self::Debug => Level::DEBUG,
-            Self::Trace => Level::TRACE
+impl From<LoggingLevel> for Level {
+    fn from(value: LoggingLevel) -> Self {
+        match value {
+            LoggingLevel::Error => Level::ERROR,
+            LoggingLevel::Warn => Level::WARN,
+            LoggingLevel::Info => Level::INFO,
+            LoggingLevel::Debug => Level::DEBUG,
+            LoggingLevel::Trace => Level::TRACE
         }
     }
 }
