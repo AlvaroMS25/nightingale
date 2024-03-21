@@ -502,7 +502,7 @@ Response:
 
 ### Getting tracks from a playlist
 TO get all the tracks from a playlist, make a `get` request against the path `/api/v1/search/youtube/playlist` providing
-a `playlist` query with the playlist url or id (preferably url since it avoids an http request).
+a `playlist` query with the playlist url or id.
 
 This route returns a playlist object with the following fields:
 

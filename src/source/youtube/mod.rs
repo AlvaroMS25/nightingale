@@ -87,9 +87,9 @@ impl Youtube {
                 }
             }))
     }
-
-    async fn playlist_from_url(&self, url: String) -> Result<YoutubePlaylist, IntoResponseError> {
-        Playlist::get(url, Some(&PlaylistSearchOptions {
+    pub async fn playlist(&self, playlist: String) -> Result<YoutubePlaylist, IntoResponseError> {
+        let playlist_url = Playlist::get_playlist_url(playlist).ok_or(IntoResponseError::new("Invalid playlist"))?;
+        Playlist::get(playlist_url, Some(&PlaylistSearchOptions {
             request_options: Some(self.request_options.clone()),
             fetch_all: true,
             ..Default::default()
@@ -97,28 +97,6 @@ impl Youtube {
             .await
             .map(Into::into)
             .map_err(Into::into)
-    }
-
-    pub async fn playlist(&self, playlist: String) -> Result<YoutubePlaylist, IntoResponseError> {
-        if self.can_play(&playlist) { // If provided by url
-            self.playlist_from_url(playlist).await
-        } else {
-            let url = self.search.search_one(playlist, Some(&SearchOptions {
-                search_type: SearchType::Playlist,
-                ..Default::default()
-            }))
-                .await?
-                .and_then(|res| {
-                    if let SearchResult::Playlist(p) = res {
-                        Some(p.url)
-                    } else {
-                        None
-                    }
-                })
-                .ok_or_else(|| IntoResponseError::new("No playlist found"))?;
-
-            self.playlist_from_url(url).await
-        }
     }
 }
 
