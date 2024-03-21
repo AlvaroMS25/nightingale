@@ -58,7 +58,7 @@ pub async fn play(
     let (source, metadata): (Input, _) = match options.source {
         PlaySource::Bytes {track, bytes} => {
             (bytes.into(), TrackMetadata {
-                metadata: track.into(),
+                metadata: track.map(Into::into).unwrap_or_default(),
                 guild: guild.get()
             })
         },
