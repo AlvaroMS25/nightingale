@@ -1,8 +1,6 @@
-mod error;
-
 use reqwest::Client;
 use songbird::input::{AuxMetadata, Input};
-pub use error::IntoResponseError;
+use crate::api::error::IntoResponseError;
 use crate::source::http::HttpSource;
 use crate::source::youtube::Youtube;
 use crate::source::ytdlp::Ytdlp;
