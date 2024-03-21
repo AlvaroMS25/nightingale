@@ -1,28 +1,23 @@
 use std::num::NonZeroU64;
 use std::sync::Arc;
-use std::time::Duration;
 use axum::body::Body;
-use axum::extract::{Path, Query};
+use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::extract::State as AxumState;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
-use rusty_ytdl::Video;
-use serde::Deserialize;
-use songbird::input::{AuxMetadata, Compose, HttpRequest, Input, YoutubeDl};
-use songbird::tracks::TrackHandle;
-use tracing::{error, info, warn};
+use songbird::input::Input;
+use tracing::info;
 use uuid::Uuid;
 use crate::api::error::IntoResponseError;
 
 use crate::api::extractors::player::PlayerExtractor;
-use crate::api::extractors::session::{SessionExtractor, SessionWithGuildExtractor};
+use crate::api::extractors::session::SessionWithGuildExtractor;
 use crate::api::model::connection::DeserializableConnectionInfo;
 use crate::api::model::play::{PlayOptions, PlaySource};
 use crate::api::model::player::Player;
 use crate::api::model::track::Track;
 use crate::api::state::State;
-use crate::ext::{AsyncIteratorExt, AsyncOptionExt};
 use crate::playback::metadata::TrackMetadata;
 
 /// Retrieves information about the given player.

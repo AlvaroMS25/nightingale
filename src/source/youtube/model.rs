@@ -1,7 +1,6 @@
-use std::mem::take;
 use std::time::Duration;
 use rusty_ytdl::search::{Playlist, Video};
-use rusty_ytdl::{VideoDetails, VideoFormat, VideoInfo};
+use rusty_ytdl::{VideoDetails, VideoFormat};
 use serde::Serialize;
 use songbird::input::AuxMetadata;
 use crate::ext::VecExt;

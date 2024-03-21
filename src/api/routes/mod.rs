@@ -1,6 +1,6 @@
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
-use axum::routing::{delete, get, patch, post, put};
+use axum::routing::{get, patch, post};
 use crate::api::state::State;
 
 mod prometheus;
@@ -21,7 +21,7 @@ pub fn get_router() -> Router<State> {
             .nest("/players/:guild", Router::new()
                 .route("/update", patch(player::update))
                 .route("/info", get(player::info))
-                .route("/play", post(player::play))
+                .route("/play", post(player::play).layer(DefaultBodyLimit::disable()))
                 .route("/pause", patch(player::pause))
                 .route("/resume", patch(player::resume))
                 .route("/set_volume/:volume", patch(player::volume))

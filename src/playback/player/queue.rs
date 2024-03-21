@@ -31,6 +31,7 @@ impl Queue {
         self.current.as_ref()
     }
 
+    #[allow(unused)]
     pub fn next(&self) -> Option<&TrackHandle> {
         self.next.as_ref()
     }
@@ -43,6 +44,7 @@ impl Queue {
         self.current().map(|t| t.play());
     }
 
+    #[allow(unused)]
     pub fn skip(&mut self) -> Option<TrackResult<TrackHandle>> {
         let current = self.current.take()?;
 
