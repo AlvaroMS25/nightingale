@@ -13,12 +13,14 @@ pub enum PlaySource {
         link: String
     },
     Http {
-        track: Track,
+        #[serde(default)]
+        track: Option<Track>,
         link: String
     },
     /// Provided the whole track in bytes, ready to play without querying any more information.
     Bytes {
-        track: Track,
+        #[serde(default)]
+        track: Option<Track>,
         bytes: Vec<u8>
     }
 }
