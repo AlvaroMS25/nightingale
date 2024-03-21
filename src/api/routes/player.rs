@@ -1,25 +1,23 @@
 use std::num::NonZeroU64;
 use std::sync::Arc;
 use axum::body::Body;
-use axum::extract::{Path, Query};
+use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::extract::State as AxumState;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
-use serde::Deserialize;
-use songbird::input::{AuxMetadata, Compose, Input, YoutubeDl};
-use songbird::tracks::TrackHandle;
-use tracing::{error, info, warn};
+use songbird::input::Input;
+use tracing::info;
 use uuid::Uuid;
+use crate::api::error::IntoResponseError;
 
 use crate::api::extractors::player::PlayerExtractor;
-use crate::api::extractors::session::{SessionExtractor, SessionWithGuildExtractor};
+use crate::api::extractors::session::SessionWithGuildExtractor;
 use crate::api::model::connection::DeserializableConnectionInfo;
 use crate::api::model::play::{PlayOptions, PlaySource};
 use crate::api::model::player::Player;
 use crate::api::model::track::Track;
 use crate::api::state::State;
-use crate::ext::{AsyncIteratorExt, AsyncOptionExt};
 use crate::playback::metadata::TrackMetadata;
 
 /// Retrieves information about the given player.
@@ -33,7 +31,7 @@ pub async fn info(PlayerExtractor {player, ..}: PlayerExtractor) -> Json<Player>
 pub async fn update(
     SessionWithGuildExtractor {session, guild}: SessionWithGuildExtractor,
     body: Option<Json<DeserializableConnectionInfo>>
-) -> impl IntoResponse {
+) -> Result<Response, IntoResponseError> {
     info!("Incoming connection request");
     let player = session.playback.get_or_create(guild, Arc::clone(&session)).await;
 
@@ -42,27 +40,20 @@ pub async fn update(
     let mut lock = player.lock().await;
 
     if let Err(e) = lock.update(info).await {
-        return Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .header(
-                axum::http::header::CONTENT_TYPE,
-                super::super::APPLICATION_JSON
-            )
-            .body(Body::from(format!(r#"{{ "message": "{e}" }}"#)))
-            .unwrap()
+        return Err(IntoResponseError::new(e));
     }
 
-    Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .body(Body::empty())
-        .unwrap()
+        .unwrap())
 }
 
 pub async fn play(
     AxumState(state): AxumState<State>,
     PlayerExtractor {player, guild}: PlayerExtractor,
     Json(options): Json<PlayOptions>
-) -> impl IntoResponse {
+) -> Result<Json<Track>, IntoResponseError> {
     info!("Received play request");
     let (source, metadata): (Input, _) = match options.source {
         PlaySource::Bytes {track, bytes} => {
@@ -71,40 +62,21 @@ pub async fn play(
                 guild: guild.get()
             })
         },
-        PlaySource::Link(link) => {
-            let mut ytdl = YoutubeDl::new(state.http.clone(), link);
+        other => {
+            let source = state.sources.source_for(&other);
+            let (url, track) = other.into_inner();
 
-            let metadata = match ytdl.aux_metadata().await {
-                Ok(m) => m,
-                Err(e) => {
-                    return Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
-                        .header(
-                            axum::http::header::CONTENT_TYPE,
-                            super::super::APPLICATION_JSON
-                        )
-                        .body(Body::from(format!(r#"{{"message": "{e}"}}"#)))
-                        .unwrap();
-                }
-            };
-            (ytdl.into(), TrackMetadata {
-                metadata,
-                guild: guild.get()
-            })
+            let mut playable = source.play_url(url).await?;
+
+            if let Some(t) = track {
+                playable.meta = t.into();
+            }
+
+            (playable.input, TrackMetadata { metadata: playable.meta, guild: guild.get() })
         }
     };
 
-    let Ok(serialized) = serde_json::to_string(&metadata.track()) else {
-        return Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .header(
-                axum::http::header::CONTENT_TYPE,
-                super::super::APPLICATION_JSON
-            )
-            .body(Body::from(r#"{"message": "Failed to serialize track"}"#))
-            .unwrap();
-    };
-
+    let track = metadata.track();
     if options.force_play {
         player.lock().await.play_now(source, metadata).await;
     } else {
@@ -112,19 +84,12 @@ pub async fn play(
     }
 
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(
-            axum::http::header::CONTENT_TYPE,
-            super::super::APPLICATION_JSON
-        )
-        .body(Body::from(serialized))
-        .unwrap()
+    Ok(Json(track))
 }
 
 /// Pauses the provided player.
 pub async fn pause(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoResponse {
-    let _ = player.lock().await.pause();
+    player.lock().await.pause();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -134,7 +99,7 @@ pub async fn pause(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoRe
 
 /// Resumes the provided player.
 pub async fn resume(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoResponse {
-    let _ = player.lock().await.resume();
+    player.lock().await.resume();
 
     Response::builder()
         .status(StatusCode::OK)
@@ -147,7 +112,7 @@ pub async fn resume(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoR
 pub async fn volume(
     AxumState(state): AxumState<State>,
     Path((session, guild, volume)): Path<(Uuid, NonZeroU64, u8)>
-) -> Result<Response, Response> {
+) -> Result<Response, IntoResponseError> {
     let PlayerExtractor { player, .. } = PlayerExtractor::from_id(session, &state, guild)?;
     player.lock().await.set_volume(volume);
 

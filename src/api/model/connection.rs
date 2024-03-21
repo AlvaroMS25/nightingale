@@ -1,10 +1,10 @@
 use std::num::NonZeroU64;
 use songbird::ConnectionInfo;
-use songbird::id::UserId;
 use crate::api::model::nz::NzU64;
 
 /// Possible `update_state` payloads.
 #[non_exhaustive]
+#[allow(clippy::enum_variant_names)]
 #[derive(serde::Serialize, Debug)]
 #[serde(tag = "type", content = "data")]
 #[serde(rename_all = "snake_case")]

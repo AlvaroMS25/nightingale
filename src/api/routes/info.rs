@@ -44,7 +44,7 @@ pub async fn info(
         let cpu = CpuInfo {
             total_usage: lock.global_cpu_info().cpu_usage(),
             process_usage: process.cpu_usage(),
-            cores: lock.cpus().into_iter()
+            cores: lock.cpus().iter()
                 .map(|cpu| {
                     CoreInfo {
                         total_usage: cpu.cpu_usage(),

@@ -58,7 +58,7 @@ impl PlayerHandler {
         None
     }
 
-    async fn driver_disconnect(&self, data: &DisconnectData<'_>) -> Option<Event> {
+    async fn driver_disconnect(&self, _data: &DisconnectData<'_>) -> Option<Event> {
         self.player.lock()
             .await
             .channel_id = None;

@@ -2,14 +2,11 @@ pub mod handler;
 pub mod queue;
 
 use std::fmt;
-use std::fmt::Pointer;
-use std::sync::Arc;
 use songbird::{ConnectionInfo, Driver};
-use songbird::error::{ConnectionError, JoinResult};
+use songbird::error::ConnectionError;
 use songbird::id::{ChannelId, GuildId};
 use songbird::input::Input;
 use songbird::tracks::{Track as SongbirdTrack, TrackHandle};
-use tokio::sync::Mutex;
 use tracing::{info, instrument, warn};
 use crate::playback::metadata::TrackMetadata;
 use crate::api::model::player::Player as PlayerModel;

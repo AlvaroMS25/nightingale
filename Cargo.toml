@@ -31,6 +31,8 @@ prometheus-client = "0.22"
 sysinfo = "0.30"
 const_format = "0.2.31"
 which = "6.0.0"
+rusty_ytdl = "=0.7.1"
+regex = "1.10.3"
 
 [dependencies.symphonia]
 version = "0.5.3"

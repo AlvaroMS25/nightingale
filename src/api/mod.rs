@@ -17,6 +17,7 @@ pub mod session;
 mod routes;
 mod extractors;
 mod layers;
+pub mod error;
 
 const APPLICATION_JSON: &str = "application/json";
 

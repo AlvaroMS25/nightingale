@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use std::time::Duration;
-use songbird::{Call, CoreEvent, Driver, Event, EventHandler, TrackEvent};
+use songbird::{CoreEvent, Driver, Event, EventHandler, TrackEvent};
 use driver::DriverEvents;
 use periodic::PeriodicEvents;
 use track::TrackEvents;

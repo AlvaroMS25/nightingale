@@ -30,7 +30,9 @@ impl Abort {
         self.0.complete.store(true, Ordering::Release);
 
         self.0.with_lock(|mut lock| {
-            lock.take().map(|w| w.wake());
+            if let Some(w) = lock.take() {
+                w.wake();
+            }
         })
     }
 }

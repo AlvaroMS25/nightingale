@@ -90,12 +90,26 @@ pub trait AsyncIteratorExt: Iterator + Sized {
     {
         let mut out = Vec::new();
 
-        while let Some(item) = self.next() {
+        for item in self {
             out.push(fun(item).await);
         }
 
-        Container::from_iter(out.into_iter())
+        Container::from_iter(out)
     }
 }
 
 impl<I> AsyncIteratorExt for I where I: Iterator {}
+
+pub trait VecExt<T> {
+    fn remove_optional(&mut self, _idx: usize) -> Option<T>;
+}
+
+impl<T> VecExt<T> for Vec<T> {
+    fn remove_optional(&mut self, idx: usize) -> Option<T> {
+        if self.len() > idx {
+            Some(self.remove(idx))
+        } else {
+            None
+        }
+    }
+}

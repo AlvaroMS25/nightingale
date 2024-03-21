@@ -1,20 +1,18 @@
 use std::num::NonZeroU64;
 use std::sync::Arc;
-use axum::body::Body;
-use axum::extract::{FromRequestParts, Path, Query};
+use axum::extract::{FromRequestParts, Path};
 use axum::http::request::Parts;
 use axum::http::StatusCode;
-use axum::response::Response;
 use futures_util::TryFutureExt;
-use serde::Deserialize;
 use tokio::sync::Mutex;
 use uuid::Uuid;
+use crate::api::error::IntoResponseError;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::state::State;
 use crate::playback::player::Player;
 
-const PLAYER_NON_EXISTENT: &str = r#"{"message": "The player does not exist"}"#;
-pub(super) const MISSING_ID: &str = r#"{"message": "Missing guild or session ID"}"#;
+const PLAYER_NON_EXISTENT: &str = "The player does not exist";
+pub(super) const MISSING_ID: &str = "Missing guild or session ID";
 
 /// Extractor that takes a guild id from the url parameters and resolves to the corresponding player,
 /// if the guild is not provided or the player is not available, returns a 400 Bad request
@@ -28,20 +26,12 @@ pub struct PlayerExtractor {
 
 #[async_trait::async_trait]
 impl FromRequestParts<State> for PlayerExtractor {
-    type Rejection = Response;
+    type Rejection = IntoResponseError;
 
     async fn from_request_parts(parts: &mut Parts, state: &State) -> Result<Self, Self::Rejection> {
         let Path((session, guild)) =
             <Path<(Uuid, NonZeroU64)> as FromRequestParts<State>>::from_request_parts(parts, state)
-                .map_err(|_| Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .header(
-                        axum::http::header::CONTENT_TYPE,
-                        super::super::APPLICATION_JSON
-                    )
-                    .body(Body::from(MISSING_ID))
-                    .unwrap()
-                )
+                .map_err(|_| IntoResponseError::new(MISSING_ID).with_status(StatusCode::BAD_REQUEST))
                 .await?;
 
         Self::from_id(session, state, guild)
@@ -49,20 +39,13 @@ impl FromRequestParts<State> for PlayerExtractor {
 }
 
 impl PlayerExtractor {
-    pub fn from_id(session: Uuid, state: &State, guild: NonZeroU64) -> Result<Self, Response> {
+    pub fn from_id(session: Uuid, state: &State, guild: NonZeroU64) -> Result<Self, IntoResponseError> {
         let SessionExtractor(session) = SessionExtractor::from_id(session, state)?;
 
         let Some(player) = session.playback.get_player(guild) else {
-            return Err(
-                Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .header(
-                        axum::http::header::CONTENT_TYPE,
-                        super::super::APPLICATION_JSON
-                    )
-                    .body(Body::from(PLAYER_NON_EXISTENT))
-                    .unwrap()
-            );
+            return Err(IntoResponseError::new(PLAYER_NON_EXISTENT)
+                .with_status(StatusCode::BAD_REQUEST)
+            )
         };
 
         Ok(PlayerExtractor {

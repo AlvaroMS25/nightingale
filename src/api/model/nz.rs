@@ -52,14 +52,14 @@ impl<'de> Visitor<'de> for NzU64Visitor {
     }
 }
 
-impl Into<ChannelId> for NzU64 {
-    fn into(self) -> ChannelId {
-        self.0.into()
+impl From<NzU64> for ChannelId {
+    fn from(value: NzU64) -> Self {
+        value.0.into()
     }
 }
 
-impl Into<GuildId> for NzU64 {
-    fn into(self) -> GuildId {
-        self.0.into()
+impl From<NzU64> for GuildId {
+    fn from(value: NzU64) -> Self {
+        value.0.into()
     }
 }

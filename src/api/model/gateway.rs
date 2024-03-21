@@ -1,4 +1,3 @@
-use serde_json::Value;
 use crate::api::model::track::Track;
 use crate::api::model;
 
@@ -8,13 +7,6 @@ use crate::api::model;
 #[serde(tag = "op", content = "data")]
 #[serde(rename_all = "snake_case")]
 pub enum Outgoing {
-    /// The provided payload should be forwarded to discord's gateway via the specified shard.
-    Forward {
-        /// The shard that should forward the payload.
-        shard: u64,
-        /// The payload to forward.
-        payload: Value
-    },
     /// Event sent on client websocket connection.
     Ready(model::ready::Ready),
     /// Track related events.
@@ -30,6 +22,7 @@ pub enum Outgoing {
 
 /// Track related events.
 #[non_exhaustive]
+#[allow(clippy::enum_variant_names)]
 #[derive(serde::Serialize, Debug)]
 #[serde(tag = "type", content = "data")]
 #[serde(rename_all = "snake_case")]

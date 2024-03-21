@@ -1,12 +1,10 @@
 use std::sync::Arc;
 use dashmap::DashMap;
 use parking_lot::Mutex;
-use songbird::id::{ChannelId, GuildId, UserId};
-use songbird::{Call, Driver};
-use songbird::error::{ConnectionError, JoinResult};
-use songbird::shards::{GenericSharder, Shard};
+use songbird::id::{GuildId, UserId};
+use songbird::error::ConnectionError;
 use tokio::sync::Mutex as AsyncMutex;
-use tracing::{debug, info};
+use tracing::info;
 use events::EventsExt;
 use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
