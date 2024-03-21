@@ -9,8 +9,9 @@ pub struct Sender(mpsc::UnboundedSender<Outgoing>);
 pub struct Receiver(mpsc::UnboundedReceiver<Outgoing>);
 
 impl Sender {
-    pub fn send(&self, value: Outgoing) -> Result<(), SendError<Outgoing>> {
+    pub fn send(&self, value: Outgoing) -> Result<(), SendError<Box<Outgoing>>> {
         self.0.send(value)
+            .map_err(|e| SendError(Box::new(e.0)))
     }
 }
 

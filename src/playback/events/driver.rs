@@ -13,7 +13,7 @@ pub struct DriverEvents {
 }
 
 impl DriverEvents {
-    pub async fn new(session: Arc<Session>) -> Self {
+    pub fn new(session: Arc<Session>) -> Self {
         let sender = session.playback.sender.clone();
 
         Self {

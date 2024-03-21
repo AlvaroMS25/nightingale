@@ -35,7 +35,7 @@ impl EventsExt for Player {
     async fn register_events(&mut self, session: Arc<Session>) {
         self.driver.add_global_event(
             Event::Periodic(Duration::from_secs(5), None),
-            PeriodicEvents::new(Arc::clone(&session)).await
+            PeriodicEvents::new(Arc::clone(&session))
         );
 
         chain_events(
@@ -45,7 +45,7 @@ impl EventsExt for Player {
                 TrackEvent::End,
                 TrackEvent::Error
             ],
-            TrackEvents::new(Arc::clone(&session)).await
+            TrackEvents::new(Arc::clone(&session))
         );
 
         chain_events(
@@ -55,7 +55,7 @@ impl EventsExt for Player {
                 CoreEvent::DriverDisconnect,
                 CoreEvent::DriverReconnect
             ],
-            DriverEvents::new(session).await
+            DriverEvents::new(session)
         );
 
         chain_events(
