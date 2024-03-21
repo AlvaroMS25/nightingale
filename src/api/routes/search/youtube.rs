@@ -36,7 +36,7 @@ pub async fn search(
 /// Query used on [`playlist`] route.
 #[derive(Deserialize)]
 pub struct PlaylistQuery {
-    playlist_id: String
+    playlist: String
 }
 
 /// Retrieves a playlist from the given playlist id.
@@ -44,7 +44,7 @@ pub async fn playlist(
     AxumState(state): AxumState<State>,
     Query(query): Query<PlaylistQuery>
 ) -> Result<Json<YoutubePlaylist>, Response> {
-    match state.sources.youtube.playlist(query.playlist_id).await {
+    match state.sources.youtube.playlist(query.playlist).await {
         Ok(playlist) => Ok(Json(playlist)),
         Err(e) => Err(Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)

@@ -4,7 +4,7 @@ use regex::Regex;
 use reqwest::Client;
 use rusty_ytdl as ytdl;
 use rusty_ytdl::{RequestOptions, VideoOptions, VideoQuality, VideoSearchOptions};
-use rusty_ytdl::search::{SearchOptions, SearchResult, SearchType};
+use rusty_ytdl::search::{Playlist, PlaylistSearchOptions, SearchOptions, SearchResult, SearchType};
 use songbird::input::{AuxMetadata, HttpRequest};
 use crate::source::{IntoResponseError, Playable, SourcePlayer};
 use ytdl::search::YouTube as RustyYoutube;
@@ -13,22 +13,25 @@ use model::*;
 pub struct Youtube {
     search: RustyYoutube,
     video_options: VideoOptions,
+    request_options: RequestOptions,
     http: Client,
     regexes: Box<[Regex]> // We use a boxed slice to add more regexes if needed later
 }
 
 impl Youtube {
     pub fn new(http: Client) -> Self {
+        let request_options = RequestOptions {
+            client: Some(http.clone()),
+            ..Default::default()
+        };
         Self {
-            search: RustyYoutube::new_with_options(&RequestOptions {
-                client: Some(http.clone()),
-                ..Default::default()
-            }).unwrap(), // can't fail
+            search: RustyYoutube::new_with_options(&request_options).unwrap(), // can't fail
             video_options: VideoOptions {
                 quality: VideoQuality::HighestAudio,
                 filter: VideoSearchOptions::Audio,
                 ..Default::default()
             },
+            request_options,
             http,
             regexes: vec![
                 Regex::new(r#"^((?:https?:)?\/\/)?((?:www|m|music)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"#).unwrap(),
@@ -85,20 +88,37 @@ impl Youtube {
             }))
     }
 
-    pub async fn playlist(&self, playlist: String) -> Result<YoutubePlaylist, IntoResponseError> {
-        self.search.search_one(playlist, Some(&SearchOptions {
-            search_type: SearchType::Playlist,
+    async fn playlist_from_url(&self, url: String) -> Result<YoutubePlaylist, IntoResponseError> {
+        Playlist::get(url, Some(&PlaylistSearchOptions {
+            request_options: Some(self.request_options.clone()),
+            fetch_all: true,
             ..Default::default()
         }))
-            .await?
-            .and_then(|res| {
-                if let SearchResult::Playlist(p) = res {
-                    Some(p.into())
-                } else {
-                    None
-                }
-            })
-            .ok_or_else(|| IntoResponseError::new("No playlist found"))
+            .await
+            .map(Into::into)
+            .map_err(Into::into)
+    }
+
+    pub async fn playlist(&self, playlist: String) -> Result<YoutubePlaylist, IntoResponseError> {
+        if self.can_play(&playlist) { // If provided by url
+            self.playlist_from_url(playlist).await
+        } else {
+            let url = self.search.search_one(playlist, Some(&SearchOptions {
+                search_type: SearchType::Playlist,
+                ..Default::default()
+            }))
+                .await?
+                .and_then(|res| {
+                    if let SearchResult::Playlist(p) = res {
+                        Some(p.url)
+                    } else {
+                        None
+                    }
+                })
+                .ok_or_else(|| IntoResponseError::new("No playlist found"))?;
+
+            self.playlist_from_url(url).await
+        }
     }
 }
 
