@@ -7,7 +7,7 @@ use rusty_ytdl::{RequestOptions, VideoOptions, VideoQuality, VideoSearchOptions}
 use rusty_ytdl::search::{SearchOptions, SearchResult, SearchType};
 use serde::Serialize;
 use songbird::input::{AuxMetadata, HttpRequest};
-use crate::source::{Playable, SourcePlayer, IntoResponseError};
+use crate::source::{IntoResponseError, Playable, SourcePlayer};
 use ytdl::search::YouTube as RustyYoutube;
 use model::*;
 
