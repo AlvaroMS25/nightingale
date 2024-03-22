@@ -24,8 +24,8 @@ impl PeriodicEvents {
 
 #[async_trait::async_trait]
 impl EventHandler for PeriodicEvents {
-    async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
-        let _ = ctx;
+    async fn act(&self, _ctx: &EventContext<'_>) -> Option<Event> {
+        // TODO: Search periodic stats through ws
         None
     }
 }
