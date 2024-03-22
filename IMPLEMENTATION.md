@@ -45,7 +45,7 @@ structure:
 ## Op codes
 
 ### Ready
-When a client connects to the server, nightingale will send a `ready` event, as its name says,
+When a client connects to the server, Nightingale will send a `ready` event, as its name says,
 this event corresponds to the `ready` opcode. The structure of this event is the following:
 
 | Field     | Data type                                | Explanation                                 |
@@ -452,7 +452,7 @@ As of today, only searching from youtube is supported
 
 ### Searching for query results
 To search for results on youtube, make a `get` request against the path `/api/v1/search/youtube/search` providing a
-`query` query on the url.
+`query` query on the URL.
 
 This route returns a list of Youtube specific track objects, which have the following fields:
 
@@ -501,7 +501,7 @@ Response:
 </details>
 
 ### Getting tracks from a playlist
-TO get all the tracks from a playlist, make a `get` request against the path `/api/v1/search/youtube/playlist` providing
+To get all the tracks from a playlist, make a `get` request against the path `/api/v1/search/youtube/playlist` providing
 a `playlist` query with the playlist url or id.
 
 This route returns a playlist object with the following fields:
@@ -518,32 +518,28 @@ where `<session>` is the session id received in the [Ready](#ready) event.
 
 ## Player related routes
 
-### Joining a voice channel
-To join a voice channel, a `put` http request must be done against `/players/<guild_id>/connect`,
-providing the following queries:
+### Updating player state
+This endpoint is used both to connect and disconnect to voice channels. To use this route, a `patch` request must
+be done against the path `/players/<guild_id>/update`. This route accepts an optional JSON body with the following fields:
 
-| Query        | Data type | Explanation                                         |
-|--------------|-----------|-----------------------------------------------------|
-| `channel_id` | `Integer` | The channel id to connect to                        |
+| Field        | Data type               | Explanation                             |
+|--------------|-------------------------|-----------------------------------------|
+| `channel_id` | `String?` or `Integer?` | The channel id to connect to, if known. |
+| `endpoint`   | `String`                | The endpoint to connect voice to.       |
+| `session_id` | `String`                | The session if of the connection        |
+| `token`      | `String`                | The token of the connection             |
 
-If all queries are provided and valid, Nightingale will automatically respond with an `200 OK` status, but this
-does **not** mean the server is actually connected to a channel. Since joining a channel needs both *voice state*
-and *voice server* update payloads, the connection will be really established when the server receives those, and it will
-emit the `connect_gateway` event. Receiving it means the server is **actually** connected to the voice channel.
+The json body is optional, and if not provided, Nightingale will disconnect from an existing voice connection, or do
+nothing if not connected.
 
-### Leaving a voice channel
-To leave a voice channel, a `delete` http request must be done against the path `/players/<guild_id>/disconnect`,
-providing the following queries:
-
-Receiving a `200 OK` response **does** mean the server disconnected from the channel, however, the `disconnect_gateway`
-event will still be fired.
 
 ### Playing tracks
-As of now, Nightingale supports playing from either a link from a source supported by [yt-dlp] or providing a file in bytes
-to play from, to do this, a `post` request must be done against the path `/players/<guild_id>/play`,
-providing the following queries:
+As of now, Nightingale supports playing from an HTTP Stream, Youtube or file bytes natively. Otherwise, it will use
+[yt-dlp] as a backend to retrieve the actual url of the stream, and then stream it, please note that this is slower since
+a new [yt-dlp] process needs to be started each time, and it takes some more time than the natively supported sources.
 
-And a json body with the following fields:
+To start playing from sources, a `post` request must be done against the path `/players/<guild_id>/play`,
+providing the following JSON body:
 
 | Field        | Data type    | Explanation                                                                          |
 |--------------|--------------|--------------------------------------------------------------------------------------|
@@ -552,17 +548,32 @@ And a json body with the following fields:
 
 `PlaySource` has the following fields:
 
-| Field  | Options                                                               | Explanation                 |
-|--------|-----------------------------------------------------------------------|-----------------------------|
-| `type` | `"link"` or `"bytes"`                                                 | The type of source provided |
-| `data` | `PlayBytes` if `type` is `"bytes"` and `String` if `type` is `"link"` | The actual source           |
+| Field  | Options                                                                                                   | Explanation                 |
+|--------|-----------------------------------------------------------------------------------------------------------|-----------------------------|
+| `type` | `"link"`, `http` or `"bytes"`                                                                             | The type of source provided |
+| `data` | `PlayLink` if `type` is `"link"`, `PlayHttp` if `type` is `"http"` and `PlayBytes` if `type` is `"bytes"` | The actual source           |
+
+
+`PlayLink` is a json object with the following fields:
+
+| Field         | Data type                        | Explanation                                                                          |
+|---------------|----------------------------------|--------------------------------------------------------------------------------------|
+| `force_ytdlp` | `Boolean?` (defaults to `false`) | Whether to force Nightingale to use yt-dlp to play, if not, Nightingale will decide. |
+| `link`        | `String`                         | Source link to play from.                                                            |
+
+`PlayHttp` is a json object with the following fields:
+
+| Field   | Data type                                              | Explanation            |
+|---------|--------------------------------------------------------|------------------------|
+| `track` | [Track?](#track-object) described at track start event | The track object       |
+| `link`  | `String`                                               | The link of the stream |
 
 `PlayBytes` is a json object with the following fields:
 
-| Field   | Data type                                             | Explanation            |
-|---------|-------------------------------------------------------|------------------------|
-| `track` | [Track](#track-object) described at track start event | The track object       |
-| `bytes` | `ByteArray`                                           | The bytes of the track |
+| Field   | Data type                                              | Explanation            |
+|---------|--------------------------------------------------------|------------------------|
+| `track` | [Track?](#track-object) described at track start event | The track object       |
+| `bytes` | `ByteArray`                                            | The bytes of the track |
 
 
 This endpoint returns a [Track](#track-object) object, the same as described at track start event.
@@ -573,8 +584,9 @@ To pause or resume playback, a `patch` request against the paths
 
 ### Modifying playback volume
 To modify the volume, a `patch` request must be done against the path `/players/<guild_id>/volume/<new_volume>`
-where `<new_volume>` is the new volume to set as a `float`. Please take into account that a value of 1.0 means a 100% volume, so be
-careful with the values used.
+where `<new_volume>` is the new volume to set as a `8 bit integer`, and will accept values from 0 to 254. 
+Please take into account that a value of 100 means a 100% volume, so be careful with the values used since it can lead to
+some type of distortion.
 
 ### Getting player information
 To get information about a player, make a `get` request against the path `/players/<guild_id>/info`. This route returns a
