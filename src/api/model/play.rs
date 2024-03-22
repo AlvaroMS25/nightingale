@@ -29,7 +29,8 @@ impl PlaySource {
     pub fn into_inner(self) -> (String, Option<Track>) {
         match self {
             Self::Link { link, .. } => (link, None),
-            _ => unreachable!()
+            Self::Http { link, track } => (link, track),
+            Self::Bytes {..} => unreachable!() // This method won't be called with bytes variant.
         }
     }
 }
