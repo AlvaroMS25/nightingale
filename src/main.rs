@@ -1,3 +1,4 @@
+use std::io::BufReader;
 use std::time::Duration;
 use tracing::{error, info, Level};
 use crate::config::{Config, LoggingLevel};
@@ -33,7 +34,7 @@ fn main() {
         }
     };
 
-    let config = match serde_yaml::from_reader::<_, Config>(file) {
+    let config = match serde_yaml::from_reader::<_, Config>(BufReader::new(file)) {
         Ok(c) => c,
         Err(e) => {
             eprintln!("Failed to read nightingale.yml, {e}");
