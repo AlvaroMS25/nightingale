@@ -39,7 +39,8 @@ version = "0.5.3"
 features = ["all"]
 
 [dependencies.songbird]
-#git = "https://github.com/serenity-rs/songbird.git"
-version = "0.4.0"
+git = "https://github.com/serenity-rs/songbird.git"
+branch = "current"
+#version = "0.4.0"
 default-features = false
 features = ["driver", "gateway", "rustls"]
