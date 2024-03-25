@@ -37,10 +37,10 @@ pub async fn update(
 
     let info = body.map(|j| j.0.into_songbird(session.playback.user_id.0, guild));
 
-    let mut lock = player.lock().await;
-
-    if let Err(e) = lock.update(info).await {
-        return Err(IntoResponseError::new(e));
+    if let Some(info) = info {
+        player.lock().await.update(Some(info)).await?;
+    } else {
+        session.playback.destroy_player(guild).await?;
     }
 
     Ok(Response::builder()
