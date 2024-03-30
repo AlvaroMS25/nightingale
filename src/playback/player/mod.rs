@@ -2,7 +2,7 @@ pub mod handler;
 pub mod queue;
 
 use std::fmt;
-use songbird::{ConnectionInfo, Driver};
+use songbird::{Config, ConnectionInfo, Driver};
 use songbird::error::ConnectionError;
 use songbird::id::{ChannelId, GuildId};
 use songbird::input::Input;
@@ -31,11 +31,11 @@ pub struct Player {
 unsafe impl Send for Player {}
 
 impl Player {
-    pub fn new(guild_id: GuildId) -> Self {
+    pub fn new(guild_id: GuildId, config: Config) -> Self {
         Self {
             guild_id,
             channel_id: None,
-            driver: Driver::new(Default::default()),
+            driver: Driver::new(config),
             queue: Queue::new(),
             volume: 100,
             paused: false

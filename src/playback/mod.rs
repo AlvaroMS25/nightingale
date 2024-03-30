@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use dashmap::DashMap;
 use parking_lot::Mutex;
+use songbird::Config;
+use songbird::driver::DisposalThread;
 use songbird::id::{GuildId, UserId};
 use songbird::error::ConnectionError;
 use tokio::sync::Mutex as AsyncMutex;
@@ -19,7 +21,8 @@ pub struct Playback {
     pub players: DashMap<GuildId, Arc<AsyncMutex<Player>>>,
     pub receiver: Mutex<Option<Receiver>>,
     pub sender: Sender,
-    pub user_id: UserId
+    pub user_id: UserId,
+    pub disposer: DisposalThread
 }
 
 impl Playback {
@@ -30,7 +33,8 @@ impl Playback {
             players: DashMap::new(),
             sender: tx,
             receiver: Mutex::new(Some(rx)),
-            user_id: user_id.into()
+            user_id: user_id.into(),
+            disposer: DisposalThread::run()
         }
     }
 
@@ -53,7 +57,9 @@ impl Playback {
                 .map(|v| Arc::clone(v.value()))
                 .unwrap()
         } else {
-            let mut player = Player::new(guild);
+            let mut player = Player::new(guild, Config::default()
+                .disposer(self.disposer.clone())
+            );
             player.register_events(s).await;
 
             info!("Created player for guild {guild}");
