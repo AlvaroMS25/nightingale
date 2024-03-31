@@ -1,7 +1,0 @@
-server:
-  address: 127.0.0.1
-  port: 8081
-  password: mypassword
-logging:
-  level: info
-  enable: true
