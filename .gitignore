@@ -15,4 +15,4 @@ Cargo.lock
 .idea
 *.exe
 
-nightingale.yml
+nightingale.toml
