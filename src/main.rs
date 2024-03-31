@@ -1,4 +1,3 @@
-use std::io::BufReader;
 use std::time::Duration;
 use tracing::{error, info, Level};
 use crate::config::{Config, LoggingLevel};
@@ -24,25 +23,25 @@ const NIGHTINGALE: &str = r#"
 fn main() {
     println!("{NIGHTINGALE}\n");
 
-    println!("Reading nightingale.yml");
+    println!("Reading nightingale.toml");
 
-    let file = match std::fs::File::open("nightingale.yml") {
+    let file = match std::fs::read_to_string("nightingale.toml") {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("Failed to open nightingale.yml, {e}");
+            eprintln!("Failed to read nightingale.toml, {e}");
             return;
         }
     };
 
-    let config = match serde_yaml::from_reader::<_, Config>(BufReader::new(file)) {
+    let config = match toml::from_str::<Config>(&file) {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("Failed to read nightingale.yml, {e}");
+            eprintln!("Failed to read nightingale.toml, {e}");
             return;
         }
     };
 
-    println!("Read nightingale.yml");
+    println!("Read nightingale.toml");
 
     if config.logging.enable {
         tracing_subscriber::fmt()
