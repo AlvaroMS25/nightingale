@@ -5,4 +5,4 @@ password = "mypassword"
 
 [logging]
 enable = true
-level = "trace"
+level = "info"
