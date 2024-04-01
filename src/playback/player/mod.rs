@@ -23,7 +23,7 @@ pub struct Player {
     /// Queue of tracks.
     pub queue: Queue,
     /// Current volume of the player.
-    pub volume: u8,
+    pub volume: f32,
     /// Whether if the player is paused.
     pub paused: bool
 }
@@ -37,7 +37,7 @@ impl Player {
             channel_id: None,
             driver: Driver::new(config),
             queue: Queue::new(),
-            volume: 100,
+            volume: 1.0,
             paused: false
         }
 
@@ -65,7 +65,7 @@ impl Player {
     /// Submits the provided input to the call driver, getting a [`TrackHandle`] and
     /// inserting the track data.
     async fn get_handle<T: Into<Input>>(&mut self, item: T, data: TrackMetadata) -> TrackHandle {
-        let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume((self.volume / 100) as _);
+        let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume(self.volume);
         let handle = self.driver.play(track.pause());
         handle.typemap().write().await.insert::<TrackMetadata>(data);
 
@@ -106,7 +106,7 @@ impl Player {
     }
 
     /// Changes the volume of the player.
-    pub fn set_volume(&mut self, volume: u8) {
+    pub fn set_volume(&mut self, volume: f32) {
         self.queue.set_volume(volume);
 
         self.volume = volume;
@@ -125,7 +125,7 @@ impl Player {
             guild_id: self.guild_id.0,
             channel_id: self.channel_id.map(|c| c.0),
             paused: self.paused,
-            volume: self.volume,
+            volume: (self.volume * 100.0) as _,
             currently_playing: self.queue.current.as_ref().async_map(track).await,
             queue: {
                 let mut v = Vec::new();

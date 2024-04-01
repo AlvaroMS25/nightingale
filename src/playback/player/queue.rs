@@ -53,10 +53,9 @@ impl Queue {
         Some(current.stop().map(|_| current))
     }
 
-    pub fn set_volume(&self, volume: u8) {
-        let fmt = (volume / 100) as f32;
-        self.current.as_ref().map(|handle| handle.set_volume(fmt));
-        self.next.as_ref().map(|handle| handle.set_volume(fmt));
+    pub fn set_volume(&self, volume: f32) {
+        self.current.as_ref().map(|handle| handle.set_volume(volume));
+        self.next.as_ref().map(|handle| handle.set_volume(volume));
     }
 
     pub fn play_next(&mut self) -> TrackResult<()> {

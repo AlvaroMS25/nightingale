@@ -114,7 +114,7 @@ pub async fn volume(
     Path((session, guild, volume)): Path<(Uuid, NonZeroU64, u8)>
 ) -> Result<Response, IntoResponseError> {
     let PlayerExtractor { player, .. } = PlayerExtractor::from_id(session, &state, guild)?;
-    player.lock().await.set_volume(volume);
+    player.lock().await.set_volume((volume as f32) / 100.0);
 
     Ok(Response::builder()
         .status(StatusCode::OK)
