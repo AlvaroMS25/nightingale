@@ -30,15 +30,15 @@ needs better.
 ## Usage
 Nightingale requires a ``nightingale.yml`` configuration file, which has the following structure:
 
-````yaml
-server:
-  address: 127.0.0.1
-  port: 8081
-  password: mypasword
-  # ...
-logging: # Optional field
-  enable: true
-  level: info
+````toml
+[server]
+address = "127.0.0.1"
+port = 8081
+password = "mypassword"
+
+[logging]
+enable = true
+level = "info"
 ````
 <br>
 
