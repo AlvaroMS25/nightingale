@@ -584,7 +584,7 @@ To pause or resume playback, a `patch` request against the paths
 
 ### Modifying playback volume
 To modify the volume, a `patch` request must be done against the path `/players/<guild_id>/volume/<new_volume>`
-where `<new_volume>` is the new volume to set as a `8 bit integer`, and will accept values from 0 to 254. 
+where `<new_volume>` is the new volume to set as an integer, and will accept values from 0 to 512. 
 Please take into account that a value of 100 means a 100% volume, so be careful with the values used since it can lead to
 some type of distortion.
 
@@ -597,6 +597,6 @@ player object that represents the state of a player. The object has the followin
 | `guild_id`          | `Integer`                 |
 | `channel_id`        | `Integer?`                |
 | `paused`            | `Boolean`                 |
-| `volume`            | `Integer` (from 0 to 254) |
+| `volume`            | `Integer` (from 0 to 512) |
 | `currently_playing` | [Track](#track-object)?   |
 | `queue`             | [Track](#track-object)[ ] |

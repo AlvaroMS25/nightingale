@@ -111,9 +111,16 @@ pub async fn resume(PlayerExtractor {player, ..}: PlayerExtractor) -> impl IntoR
 /// to distortions in the playback.
 pub async fn volume(
     AxumState(state): AxumState<State>,
-    Path((session, guild, volume)): Path<(Uuid, NonZeroU64, u8)>
+    Path((session, guild, volume)): Path<(Uuid, NonZeroU64, u16)>
 ) -> Result<Response, IntoResponseError> {
     let PlayerExtractor { player, .. } = PlayerExtractor::from_id(session, &state, guild)?;
+
+    if !(0..=512).contains(&volume) {
+        return Err(IntoResponseError::new("Volume must be an integer between 0 and 512")
+            .with_status(StatusCode::BAD_REQUEST)
+        )
+    }
+
     player.lock().await.set_volume((volume as f32) / 100.0);
 
     Ok(Response::builder()
