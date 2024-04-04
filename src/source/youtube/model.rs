@@ -39,7 +39,7 @@ impl From<Video> for YoutubeTrack {
         YoutubeTrack {
             title: video.title,
             author: Some(video.channel.name),
-            length: video.duration * 1000,
+            length: video.duration,
             video_id: video.id,
             url: video.url,
             thumbnail: video.thumbnails.remove_optional(0).map(|t| t.url)
