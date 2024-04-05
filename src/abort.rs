@@ -1,9 +1,10 @@
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::task::{Context, Poll, Waker};
 use std::fmt;
+use parking_lot::{Mutex, MutexGuard};
 
 #[derive(Clone)]
 pub struct Abort(Arc<Inner>);
@@ -47,8 +48,7 @@ impl Inner {
     where
         F: for<'l> FnOnce(MutexGuard<'l, Option<Waker>>) -> R
     {
-        let lock = self.waker.lock()
-            .unwrap_or_else(|l| l.into_inner());
+        let lock = self.waker.lock();
 
         fun(lock)
     }
