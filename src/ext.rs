@@ -86,15 +86,30 @@ pub trait AsyncIteratorExt: Iterator + Sized {
         Fun: FnMut(Self::Item) -> Fut + Send,
         Fut: Future<Output = Ret> + Send,
         Ret: Send,
-        Container: FromIterator<Ret>
+        Container: GrowableContainer<Ret> + Send
     {
-        let mut out = Vec::new();
+        let mut out = Container::new();
 
         for item in self {
             out.push(fun(item).await);
         }
 
-        Container::from_iter(out)
+        out
+    }
+}
+
+pub trait GrowableContainer<T>: Sized {
+    fn new() -> Self;
+    fn push(&mut self, item: T);
+}
+
+impl<T> GrowableContainer<T> for Vec<T> {
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn push(&mut self, item: T) {
+        self.push(item);
     }
 }
 
