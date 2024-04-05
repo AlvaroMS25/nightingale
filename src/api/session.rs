@@ -1,8 +1,8 @@
 use std::num::NonZeroU64;
 use std::time::Duration;
 use parking_lot::Mutex;
-use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
+use crate::abort::Abort;
 use crate::playback::Playback;
 
 /// A session containing multiple players managed by a client.
@@ -10,7 +10,7 @@ pub struct Session {
     pub id: Uuid,
     pub playback: Playback,
     pub options: Mutex<SessionOptions>,
-    pub cleanup: Mutex<Option<CancellationToken>>
+    pub cleanup: Mutex<Option<Abort>>
 }
 
 pub struct SessionOptions {

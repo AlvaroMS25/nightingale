@@ -56,8 +56,8 @@ pub async fn resume(
           .body(Body::from(r#"{"message": "session taken"}"#))
           .unwrap()
     } else {
-        if let Some(token) = session.cleanup.lock().take() {
-            token.cancel(); // Tell the cancellation task to exit
+        if let Some(abort) = session.cleanup.lock().take() {
+            abort.abort(); // Tell the cleanup task to exit
         }
         ws.on_upgrade(move |ws| initialize_websocket(state, ws, session.id, true))
     }
@@ -87,16 +87,16 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
         };
 
         if !enable_resume {
-            debug!("Session[{id}] not allowed to resume, cleaning up");
+            debug!("Session[{id}] is not allowed to resume, cleaning up");
             if let Some((_, s)) = state.instances.remove(&id) {
                 s.destroy().await;
             }
         } else {
             debug!("Session[{id}] is allowed to resume, waiting {timeout:?} before cleaning up");
             *session.playback.receiver.lock() = Some(receiver);
-            let token = CancellationToken::new();
-            let future = token.clone().cancelled_owned();
-            *session.cleanup.lock() = Some(token);
+            let abort = Abort::new();
+            let future = abort.as_future();
+            *session.cleanup.lock() = Some(abort);
 
             match tokio::time::timeout(timeout, future).await {
                 Ok(_) => {
