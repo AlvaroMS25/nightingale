@@ -1,8 +1,5 @@
 use std::future::Future;
-use async_trait::async_trait;
-use serde_json::{Map, Number, Value};
 
-#[async_trait]
 pub trait AsyncOptionExt<T> {
 
     async fn async_map<Fun, Fut, Ret>(self, predicate: Fun) -> Option<Ret>
@@ -11,7 +8,6 @@ pub trait AsyncOptionExt<T> {
         Fut: Future<Output = Ret> + Send;
 }
 
-#[async_trait]
 impl<T: Send> AsyncOptionExt<T> for Option<T> {
     async fn async_map<Fun, Fut, Ret>(self, predicate: Fun) -> Option<Ret>
     where
@@ -25,7 +21,6 @@ impl<T: Send> AsyncOptionExt<T> for Option<T> {
     }
 }
 
-#[async_trait]
 pub trait AsyncIteratorExt: Iterator + Sized {
     async fn async_map<Fun, Fut, Ret, Container>(mut self, mut fun: Fun) -> Container
     where
