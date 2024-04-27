@@ -10,6 +10,8 @@ mod abort;
 mod metrics;
 mod source;
 mod ext;
+mod ptr;
+mod ticket;
 
 const NIGHTINGALE: &str = r#"
  _   _ _       _     _   _                   _
