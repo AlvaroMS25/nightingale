@@ -4,6 +4,7 @@ use dashmap::DashMap;
 use sysinfo::{Pid, System};
 use uuid::Uuid;
 use crate::api::session::Session;
+use crate::ptr::SharedPtr;
 use crate::source::Sources;
 
 /// The state shared throughout requests.
@@ -34,7 +35,7 @@ pub struct Inner {
     /// The Pid of the server.
     pub pid: Pid,
     /// Sources supported by nightingale.
-    pub sources: Arc<Sources>
+    pub sources: SharedPtr<Sources>
 }
 
 impl Inner {
@@ -45,7 +46,7 @@ impl Inner {
             instances: Default::default(),
             system: Mutex::new(System::new_all()),
             pid: Pid::from_u32(std::process::id()),
-            sources: Arc::new(Sources::new(http))
+            sources: SharedPtr::new(Sources::new(http))
         }
     }
 
@@ -57,5 +58,11 @@ impl Inner {
                 return candidate;
             }
         }
+    }
+}
+
+impl Drop for Inner {
+    fn drop(&mut self) {
+        unsafe { self.sources.drop_data() }
     }
 }

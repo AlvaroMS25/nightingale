@@ -1,10 +1,10 @@
 use std::num::NonZeroU64;
-use std::sync::Arc;
 use std::time::Duration;
 use parking_lot::Mutex;
 use uuid::Uuid;
 use crate::abort::Abort;
 use crate::playback::Playback;
+use crate::ptr::SharedPtr;
 use crate::source::Sources;
 
 /// A session containing multiple players managed by a client.
@@ -23,7 +23,7 @@ pub struct SessionOptions {
 }
 
 impl Session {
-    pub fn new(id: Uuid, user_id: NonZeroU64, sources: Arc<Sources>) -> Self {
+    pub fn new(id: Uuid, user_id: NonZeroU64, sources: SharedPtr<Sources>) -> Self {
         Self {
             id,
             playback: Playback::new(user_id, sources),

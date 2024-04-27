@@ -12,6 +12,7 @@ use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
 use crate::playback::player::handler::PlayerHandler;
 use crate::playback::player::Player;
+use crate::ptr::SharedPtr;
 use crate::source::Sources;
 
 pub mod metadata;
@@ -25,11 +26,11 @@ pub struct Playback {
     pub sender: Sender,
     pub user_id: UserId,
     pub disposer: DisposalThread,
-    pub sources: Arc<Sources>
+    pub sources: SharedPtr<Sources>
 }
 
 impl Playback {
-    pub fn new(user_id: impl Into<UserId>, sources: Arc<Sources>) -> Self {
+    pub fn new(user_id: impl Into<UserId>, sources: SharedPtr<Sources>) -> Self {
         let (tx, rx) = crate::channel::new();
 
         Self {

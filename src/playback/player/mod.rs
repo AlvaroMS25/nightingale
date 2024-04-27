@@ -3,7 +3,6 @@ pub mod queue;
 
 use std::collections::VecDeque;
 use std::fmt;
-use std::sync::Arc;
 use songbird::{Config, ConnectionInfo, Driver};
 use songbird::error::ConnectionError;
 use songbird::id::{ChannelId, GuildId};
@@ -20,6 +19,7 @@ use crate::channel::Sender;
 use crate::ext::{AsyncIteratorExt, AsyncOptionExt};
 use crate::playback::handle::HandleWithSource;
 use crate::playback::player::queue::RepeatMode;
+use crate::ptr::SharedPtr;
 use crate::source::Sources;
 
 /// A player for a guild.
@@ -35,13 +35,13 @@ pub struct Player {
     /// Whether if the player is paused.
     pub paused: bool,
     pub sender: Sender,
-    pub sources: Arc<Sources>
+    pub sources: SharedPtr<Sources>
 }
 
 unsafe impl Send for Player {}
 
 impl Player {
-    pub fn new(guild_id: GuildId, sources: Arc<Sources>, config: Config, sender: Sender) -> Self {
+    pub fn new(guild_id: GuildId, sources: SharedPtr<Sources>, config: Config, sender: Sender) -> Self {
         Self {
             guild_id,
             channel_id: None,
