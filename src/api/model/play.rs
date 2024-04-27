@@ -1,8 +1,9 @@
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use crate::api::model::track::Track;
 
 /// Sources that can be used to play from.
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(tag = "type", content = "data")]
 #[serde(rename_all = "snake_case")]
 pub enum PlaySource {
@@ -21,16 +22,30 @@ pub enum PlaySource {
     Bytes {
         #[serde(default)]
         track: Option<Track>,
-        bytes: Vec<u8>
+        // Bytes is cheaply cloneable because it is only a pointer clone, so if we want to keep a
+        // copy to repeat the queue, this is a great way of avoiding extra allocations
+        bytes: Bytes
     }
 }
 
 impl PlaySource {
-    pub fn into_inner(self) -> (String, Option<Track>) {
+    pub fn is_link(&self) -> bool {
+        matches!(self, Self::Link {..})
+    }
+
+    pub fn url(&self) -> String {
         match self {
-            Self::Link { link, .. } => (link, None),
-            Self::Http { link, track } => (link, track),
-            Self::Bytes {..} => unreachable!() // This method won't be called with bytes variant.
+            Self::Link {link, ..} => link.clone(),
+            Self::Http {link, ..} => link.clone(),
+            Self::Bytes {..} => unreachable!()
+        }
+    }
+
+    pub fn track(&mut self) -> Option<Track> {
+        match self {
+            Self::Link {..} => None,
+            Self::Http {track, .. } => track.take(),
+            Self::Bytes {track, .. } => track.take()
         }
     }
 }

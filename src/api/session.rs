@@ -1,9 +1,11 @@
 use std::num::NonZeroU64;
+use std::sync::Arc;
 use std::time::Duration;
 use parking_lot::Mutex;
 use uuid::Uuid;
 use crate::abort::Abort;
 use crate::playback::Playback;
+use crate::source::Sources;
 
 /// A session containing multiple players managed by a client.
 pub struct Session {
@@ -21,10 +23,10 @@ pub struct SessionOptions {
 }
 
 impl Session {
-    pub fn new(id: Uuid, user_id: NonZeroU64) -> Self {
+    pub fn new(id: Uuid, user_id: NonZeroU64, sources: Arc<Sources>) -> Self {
         Self {
             id,
-            playback: Playback::new(user_id),
+            playback: Playback::new(user_id, sources),
             options: Mutex::new(SessionOptions {
                 enable_resume: true,
                 timeout: Duration::from_secs(60)

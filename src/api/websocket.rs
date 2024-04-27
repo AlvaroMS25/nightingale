@@ -8,7 +8,6 @@ use axum::extract::ws::{Message, WebSocket};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use futures::StreamExt;
-use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 use crate::abort::Abort;
@@ -36,7 +35,7 @@ pub async fn connect(
     let id = state.generate_uuid();
 
     // Create new session.
-    state.instances.insert(id, Arc::new(Session::new(id, options.user_id)));
+    state.instances.insert(id, Arc::new(Session::new(id, options.user_id, state.sources.clone())));
 
     ws.on_upgrade(move |ws| initialize_websocket(state, ws, id, false))
 }

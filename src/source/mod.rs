@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use reqwest::Client;
 use songbird::input::{AuxMetadata, Input};
 use crate::api::error::IntoResponseError;
@@ -37,6 +38,27 @@ impl Sources {
             PlaySource::Http {..} => &self.http,
             _ => unreachable!()
         }
+    }
+
+    pub async fn playable_for(&self, source: &mut PlaySource) -> Result<Playable, IntoResponseError> {
+        Ok(match source {
+            PlaySource::Bytes {track, bytes} => Playable {
+                input: Input::from(<Bytes as Into<Input>>::into(bytes.clone())),
+                meta: track.clone().map(|t| t.into()).unwrap_or_default()
+            },
+            other => {
+                let source = self.source_for(other);
+                let url = other.url();
+
+                let mut playable = source.play_url(url).await?;
+
+                if let Some(t) = other.track() {
+                    playable.meta = t.into();
+                }
+
+                playable
+            }
+        })
     }
 }
 

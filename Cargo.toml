@@ -33,6 +33,7 @@ which = "6.0.0"
 rusty_ytdl = { version = "=0.7.1", default-features = false, features = ["search", "live", "rustls-tls"]}
 regex = "1.10.3"
 toml = "0.8.12"
+bytes = { version = "1.6.0", features = ["serde"] }
 
 [dependencies.symphonia]
 version = "0.5.3"

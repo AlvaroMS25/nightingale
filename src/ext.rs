@@ -22,7 +22,7 @@ impl<T: Send> AsyncOptionExt<T> for Option<T> {
 }
 
 pub trait AsyncIteratorExt: Iterator + Sized {
-    async fn async_map<Fun, Fut, Ret, Container>(mut self, mut fun: Fun) -> Container
+    async fn async_map<Fun, Fut, Ret, Container>(self, mut fun: Fun) -> Container
     where
         Self: Send,
         Self::Item: Send,

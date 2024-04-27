@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use songbird::input::AuxMetadata;
 
 /// Serializable songbird track.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Track {
     pub track: Option<String>,
     pub artist: Option<String>,
@@ -13,6 +13,21 @@ pub struct Track {
     pub source_url: Option<String>,
     pub title: Option<String>,
     pub thumbnail: Option<String>,
+}
+
+impl From<AuxMetadata> for Track {
+    fn from(meta: AuxMetadata) -> Self {
+        Self {
+            track: meta.track,
+            artist: meta.artist,
+            album: meta.album,
+            channel: meta.channel,
+            duration: meta.duration.map(|d| d.as_millis()),
+            source_url: meta.source_url,
+            title: meta.title,
+            thumbnail: meta.thumbnail
+        }
+    }
 }
 
 impl From<&AuxMetadata> for Track {

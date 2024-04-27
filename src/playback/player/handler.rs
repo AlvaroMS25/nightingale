@@ -39,8 +39,8 @@ impl EventHandler for PlayerHandler {
 impl PlayerHandler {
     async fn handle_track(&self, _: &[(&TrackState, &TrackHandle)]) -> Option<Event> {
         let mut player = self.player.lock().await;
-        player.queue.play_load_next();
 
+        player.play_load_next().await;
         None
     }
 

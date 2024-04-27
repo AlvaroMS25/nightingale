@@ -12,21 +12,24 @@ use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
 use crate::playback::player::handler::PlayerHandler;
 use crate::playback::player::Player;
+use crate::source::Sources;
 
 pub mod metadata;
 pub mod events;
 pub mod player;
+mod handle;
 
 pub struct Playback {
     pub players: DashMap<GuildId, Arc<AsyncMutex<Player>>>,
     pub receiver: Mutex<Option<Receiver>>,
     pub sender: Sender,
     pub user_id: UserId,
-    pub disposer: DisposalThread
+    pub disposer: DisposalThread,
+    pub sources: Arc<Sources>
 }
 
 impl Playback {
-    pub fn new(user_id: impl Into<UserId>) -> Self {
+    pub fn new(user_id: impl Into<UserId>, sources: Arc<Sources>) -> Self {
         let (tx, rx) = crate::channel::new();
 
         Self {
@@ -34,7 +37,8 @@ impl Playback {
             sender: tx,
             receiver: Mutex::new(Some(rx)),
             user_id: user_id.into(),
-            disposer: DisposalThread::run()
+            disposer: DisposalThread::run(),
+            sources
         }
     }
 
@@ -57,8 +61,12 @@ impl Playback {
                 .map(|v| Arc::clone(v.value()))
                 .unwrap()
         } else {
-            let mut player = Player::new(guild, Config::default()
-                .disposer(self.disposer.clone())
+            let mut player = Player::new(
+                guild,
+                self.sources.clone(),
+                Config::default()
+                    .disposer(self.disposer.clone()),
+                self.sender.clone()
             );
             player.register_events(s).await;
 

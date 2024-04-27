@@ -6,7 +6,6 @@ use axum::http::StatusCode;
 use axum::extract::State as AxumState;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
-use songbird::input::Input;
 use tracing::info;
 use uuid::Uuid;
 use crate::api::error::IntoResponseError;
@@ -14,7 +13,7 @@ use crate::api::error::IntoResponseError;
 use crate::api::extractors::player::PlayerExtractor;
 use crate::api::extractors::session::SessionWithGuildExtractor;
 use crate::api::model::connection::DeserializableConnectionInfo;
-use crate::api::model::play::{PlayOptions, PlaySource};
+use crate::api::model::play::PlayOptions;
 use crate::api::model::player::Player;
 use crate::api::model::track::Track;
 use crate::api::state::State;
@@ -52,35 +51,25 @@ pub async fn update(
 pub async fn play(
     AxumState(state): AxumState<State>,
     PlayerExtractor {player, guild}: PlayerExtractor,
-    Json(options): Json<PlayOptions>
+    Json(mut options): Json<PlayOptions>
 ) -> Result<Json<Track>, IntoResponseError> {
     info!("Received play request");
-    let (source, metadata): (Input, _) = match options.source {
-        PlaySource::Bytes {track, bytes} => {
-            (bytes.into(), TrackMetadata {
-                metadata: track.map(Into::into).unwrap_or_default(),
-                guild: guild.get()
-            })
-        },
-        other => {
-            let source = state.sources.source_for(&other);
-            let (url, track) = other.into_inner();
 
-            let mut playable = source.play_url(url).await?;
+    let (source, aux_meta) = state.sources.playable_for(&mut options.source).await
+        .map(|playable| (playable.input, playable.meta))?;
 
-            if let Some(t) = track {
-                playable.meta = t.into();
-            }
-
-            (playable.input, TrackMetadata { metadata: playable.meta, guild: guild.get() })
-        }
+    let meta = TrackMetadata {
+        guild: guild.get(),
+        metadata: aux_meta
     };
 
-    let track = metadata.track();
+    let track = meta.track();
+
+    let mut lock = player.lock().await;
     if options.force_play {
-        player.lock().await.play_now(source, metadata).await;
+        lock.play_now(source, meta, options.source).await;
     } else {
-        player.lock().await.enqueue(source, metadata).await;
+        lock.enqueue(source, meta, options.source).await;
     }
 
 

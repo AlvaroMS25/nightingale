@@ -33,8 +33,8 @@ pub struct Inner {
     pub system: Mutex<System>,
     /// The Pid of the server.
     pub pid: Pid,
-    /// Url sources supported by nightingale.
-    pub sources: Sources
+    /// Sources supported by nightingale.
+    pub sources: Arc<Sources>
 }
 
 impl Inner {
@@ -45,7 +45,7 @@ impl Inner {
             instances: Default::default(),
             system: Mutex::new(System::new_all()),
             pid: Pid::from_u32(std::process::id()),
-            sources: Sources::new(http)
+            sources: Arc::new(Sources::new(http))
         }
     }
 

@@ -18,6 +18,7 @@ mod routes;
 mod extractors;
 mod layers;
 pub mod error;
+mod serde;
 
 const APPLICATION_JSON: &str = "application/json";
 

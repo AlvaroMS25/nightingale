@@ -43,7 +43,8 @@ impl EventsExt for Player {
             [
                 TrackEvent::Play,
                 TrackEvent::End,
-                TrackEvent::Error
+                TrackEvent::Error,
+                TrackEvent::Loop
             ],
             TrackEvents::new(Arc::clone(&session))
         );

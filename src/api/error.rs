@@ -7,8 +7,8 @@ use axum::response::{IntoResponse, Response};
 /// Error type that implements [`IntoResponse`], so it can be used from within
 /// api routes directly.
 pub struct IntoResponseError {
-    msg: String,
-    status: StatusCode
+    pub msg: String,
+    pub status: StatusCode
 }
 
 impl IntoResponseError {
