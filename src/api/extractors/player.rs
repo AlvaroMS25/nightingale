@@ -4,11 +4,11 @@ use axum::extract::{FromRequestParts, Path};
 use axum::http::request::Parts;
 use axum::http::StatusCode;
 use futures_util::TryFutureExt;
-use tokio::sync::Mutex;
 use uuid::Uuid;
 use crate::api::error::IntoResponseError;
 use crate::api::extractors::session::SessionExtractor;
 use crate::api::state::State;
+use crate::mutex::TicketedMutex;
 use crate::playback::player::Player;
 
 const PLAYER_NON_EXISTENT: &str = "The player does not exist";
@@ -20,7 +20,7 @@ pub(super) const MISSING_ID: &str = "Missing guild or session ID";
 ///
 /// This extractor uses the [`SessionExtractor`] under the hood, and needs it to resolve first.
 pub struct PlayerExtractor {
-    pub player: Arc<Mutex<Player>>,
+    pub player: Arc<TicketedMutex<Player>>,
     pub guild: NonZeroU64
 }
 

@@ -5,11 +5,11 @@ use songbird::Config;
 use songbird::driver::DisposalThread;
 use songbird::id::{GuildId, UserId};
 use songbird::error::ConnectionError;
-use tokio::sync::Mutex as AsyncMutex;
 use tracing::info;
 use events::EventsExt;
 use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
+use crate::mutex::TicketedMutex;
 use crate::playback::player::handler::PlayerHandler;
 use crate::playback::player::Player;
 use crate::ptr::SharedPtr;
@@ -21,7 +21,7 @@ pub mod player;
 mod handle;
 
 pub struct Playback {
-    pub players: DashMap<GuildId, Arc<AsyncMutex<Player>>>,
+    pub players: DashMap<GuildId, Arc<TicketedMutex<Player>>>,
     pub receiver: Mutex<Option<Receiver>>,
     pub sender: Sender,
     pub user_id: UserId,
@@ -43,7 +43,7 @@ impl Playback {
         }
     }
 
-    pub fn get_player(&self, guild: impl Into<GuildId>) -> Option<Arc<AsyncMutex<Player>>> {
+    pub fn get_player(&self, guild: impl Into<GuildId>) -> Option<Arc<TicketedMutex<Player>>> {
         self.players.get(&guild.into())
             .map(|v| Arc::clone(v.value()))
     }
@@ -52,7 +52,7 @@ impl Playback {
         &self, 
         guild: G,
         s: Arc<Session>
-    ) -> Arc<AsyncMutex<Player>>
+    ) -> Arc<TicketedMutex<Player>>
     where
         G: Into<GuildId>,
     {
@@ -73,7 +73,7 @@ impl Playback {
 
             info!("Created player for guild {guild}");
 
-            let player = Arc::new(AsyncMutex::new(player));
+            let player = Arc::new(TicketedMutex::new(player));
             PlayerHandler::register(Arc::clone(&player)).await;
 
             self.players.insert(guild, Arc::clone(&player));

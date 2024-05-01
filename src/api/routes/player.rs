@@ -54,6 +54,7 @@ pub async fn play(
     Json(mut options): Json<PlayOptions>
 ) -> Result<Json<Track>, IntoResponseError> {
     info!("Received play request");
+    let ticket = player.ticket();
 
     let (source, aux_meta) = state.sources.playable_for(&mut options.source).await
         .map(|playable| (playable.input, playable.meta))?;
@@ -65,7 +66,7 @@ pub async fn play(
 
     let track = meta.track();
 
-    let mut lock = player.lock().await;
+    let mut lock = ticket.wait().await;
     if options.force_play {
         lock.play_now(source, meta, options.source).await;
     } else {

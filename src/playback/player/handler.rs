@@ -4,17 +4,17 @@ use async_trait::async_trait;
 use songbird::{Event, EventContext, EventHandler, TrackEvent};
 use songbird::events::context_data::{ConnectData, DisconnectData};
 use songbird::tracks::{TrackHandle, TrackState};
-use tokio::sync::Mutex;
+use crate::mutex::TicketedMutex;
 
 use super::Player;
 
 /// Handler in charge of managing a player state and its tracks.
 pub struct PlayerHandler {
-    player: Arc<Mutex<Player>>
+    player: Arc<TicketedMutex<Player>>
 }
 
 impl PlayerHandler {
-    pub async fn register(player: Arc<Mutex<Player>>) {
+    pub async fn register(player: Arc<TicketedMutex<Player>>) {
         let mut lock = player.lock().await;
 
         lock.driver.add_global_event(TrackEvent::End.into(), Self {

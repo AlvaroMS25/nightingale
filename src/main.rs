@@ -12,6 +12,7 @@ mod source;
 mod ext;
 mod ptr;
 mod ticket;
+mod mutex;
 
 const NIGHTINGALE: &str = r#"
  _   _ _       _     _   _                   _

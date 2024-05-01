@@ -19,9 +19,8 @@ impl TicketedQueue {
     }
 
     pub fn ticket(&self) -> Ticket {
-        let mut fut = self.notify.notified();
-        let pinned = unsafe { Pin::new_unchecked(&mut fut) };
-        pinned.enable();
+        let mut fut = Box::pin(self.notify.notified());
+        fut.as_mut().enable();
 
         Ticket {
             inner: fut,
@@ -31,20 +30,19 @@ impl TicketedQueue {
 }
 
 pub struct Ticket<'a> {
-    inner: Notified<'a>,
+    inner: Pin<Box<Notified<'a>>>,
     queue: Option<&'a Notify>
 }
 
 impl<'a> Future for Ticket<'a> {
     type Output = TicketPermit<'a>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let this = unsafe { self.get_unchecked_mut() };
-        let future = unsafe { Pin::new_unchecked(&mut this.inner) };
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let future = self.inner.as_mut();
         ready!(future.poll(cx));
 
         Poll::Ready(TicketPermit {
-            queue: this.queue.take().unwrap()
+            queue: self.queue.take().unwrap()
         })
     }
 }
