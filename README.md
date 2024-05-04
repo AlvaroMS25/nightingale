@@ -28,7 +28,7 @@ needs better.
 - [ ] Allow adding playlists directly
 
 ## Usage
-Nightingale requires a ``nightingale.yml`` configuration file, which has the following structure:
+Nightingale requires a ``nightingale.toml`` configuration file, which has the following structure:
 
 ````toml
 [server]
