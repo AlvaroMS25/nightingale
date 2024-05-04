@@ -13,6 +13,7 @@ needs better.
 - WebSocket gateway for event-related communication
 - REST API for controlling Nightingale players and connections such as changing volume, and more...
 - Password authentication
+- In-server queue management
 - IP Whitelisting
 
 ## Roadmap
