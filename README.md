@@ -24,7 +24,7 @@ needs better.
 - [ ] Clear queue route
 - [x] System information such as CPU and Memory usage
 - [ ] Prometheus Metrics
-- [ ] Allow writing logs to file
+- [x] Allow writing logs to file
 - [x] Routes for searching from different sources (only youtube supported right now)
 - [ ] Allow adding playlists directly
 
