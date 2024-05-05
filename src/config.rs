@@ -31,7 +31,12 @@ pub struct SslOptions {
 #[derive(Deserialize, Debug)]
 pub struct LoggingOptions {
     pub enable: bool,
-    pub level: LoggingLevel
+    #[serde(default)]
+    pub level: LoggingLevel,
+    #[serde(default)]
+    pub output: LoggingOutput,
+    #[serde(default)]
+    pub file: Option<String>
 }
 
 #[derive(Deserialize, Debug, Copy, Clone)]
@@ -44,7 +49,9 @@ impl Default for LoggingOptions {
     fn default() -> Self {
         Self {
             enable: true,
-            level: Default::default()
+            level: Default::default(),
+            output: Default::default(),
+            file: None
         }
     }
 }
@@ -70,4 +77,12 @@ impl From<LoggingLevel> for Level {
             LoggingLevel::Trace => Level::TRACE
         }
     }
+}
+
+#[derive(Deserialize, Debug, Copy, Clone, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum LoggingOutput {
+    #[default]
+    StdOut,
+    File
 }

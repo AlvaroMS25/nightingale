@@ -34,6 +34,7 @@ rusty_ytdl = { version = "=0.7.1", default-features = false, features = ["search
 regex = "1.10.3"
 toml = "0.8.12"
 bytes = { version = "1.6.0", features = ["serde"] }
+tracing-appender = "0.2.3"
 
 [dependencies.symphonia]
 version = "0.5.3"

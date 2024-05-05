@@ -1,6 +1,7 @@
 use std::time::Duration;
 use tracing::{error, info, Level};
-use crate::config::{Config, LoggingLevel};
+use crate::config::{Config, LoggingLevel, LoggingOutput};
+use crate::trace::TracingWriter;
 
 mod playback;
 mod api;
@@ -13,6 +14,7 @@ mod ext;
 mod ptr;
 mod ticket;
 mod mutex;
+mod trace;
 
 const NIGHTINGALE: &str = r#"
  _   _ _       _     _   _                   _
@@ -45,9 +47,32 @@ fn main() {
     };
 
     println!("Read nightingale.toml");
+    let mut _writer_guard = None;
 
     if config.logging.enable {
+        let writer = match (config.logging.output, config.logging.file.as_ref()) {
+            (LoggingOutput::StdOut, _) => Ok(TracingWriter::stdout()),
+            (LoggingOutput::File, Some(path)) => TracingWriter::file(path.as_str()),
+            (LoggingOutput::File, None) => {
+                eprintln!("Logging output was set to `file`, but no `file` path was provided");
+                return;
+            }
+        };
+
+        let w = match writer {
+            Ok(w) => w,
+            Err(e) => {
+                eprintln!("Failed to create logging writer, error: {e}");
+                return;
+            }
+        };
+
+        let (nb, g) = tracing_appender::non_blocking(w);
+
+        _writer_guard = Some(g);
+
         tracing_subscriber::fmt()
+            .with_writer(nb)
             .with_max_level(<LoggingLevel as Into<Level>>::into(config.logging.level))
             .init();
     }
