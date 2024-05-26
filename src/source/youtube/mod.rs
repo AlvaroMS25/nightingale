@@ -29,6 +29,7 @@ impl Youtube {
             video_options: VideoOptions {
                 quality: VideoQuality::HighestAudio,
                 filter: VideoSearchOptions::Audio,
+                request_options: request_options.clone(),
                 ..Default::default()
             },
             request_options,
