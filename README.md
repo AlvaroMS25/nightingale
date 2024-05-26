@@ -19,9 +19,9 @@ needs better.
 ## Roadmap
 - [x] Allow forcing tracks to play at arrival
 - [ ] Playback seeking route
-- [ ] Playback skip route
+- [x] Playback skip route
 - [x] Player information route
-- [ ] Clear queue route
+- [x] Clear queue route
 - [x] System information such as CPU and Memory usage
 - [ ] Prometheus Metrics
 - [x] Allow writing logs to file

@@ -155,5 +155,9 @@ impl Queue {
         for t in self.rest.drain(..) {
             let _ = t.handle.stop();
         }
+
+        for t in self.backup.drain(..) {
+            drop(t);
+        }
     }
 }
