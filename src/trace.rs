@@ -1,41 +1,56 @@
 use std::{fs, io};
-use std::fmt::Arguments;
-use std::io::{IoSlice, Read, Stdout, stdout, StdoutLock, Write};
+use std::io::{IoSlice, Stdout, stdout, Write};
 use std::path::Path;
 
+enum WriterSource {
+    Stdout(StdOutWriter),
+    File(FileWriter)
+}
 pub struct TracingWriter {
-    inner: Box<dyn Write + Send>
+    inner: WriterSource
 }
 
 impl TracingWriter {
     pub fn stdout() -> Self {
         Self {
-            inner: Box::new(StdOutWriter::new())
+            inner: WriterSource::Stdout(StdOutWriter::new())
         }
     }
 
     pub fn file(path: impl AsRef<Path>) -> io::Result<Self> {
         Ok(Self {
-            inner: Box::new(FileWriter::new(path)?)
+            inner: WriterSource::File(FileWriter::new(path)?)
         })
     }
 }
 
 impl Write for TracingWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.inner.write(buf)
+        match &mut self.inner {
+            WriterSource::Stdout(out) => out.write(buf),
+            WriterSource::File(file) => file.write(buf)
+        }
     }
 
     fn write_vectored(&mut self, bufs: &[IoSlice<'_>]) -> io::Result<usize> {
-        self.inner.write_vectored(bufs)
+        match &mut self.inner {
+            WriterSource::Stdout(out) => out.write_vectored(bufs),
+            WriterSource::File(file) => file.write_vectored(bufs)
+        }
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.inner.flush()
+        match &mut self.inner {
+            WriterSource::Stdout(out) => out.flush(),
+            WriterSource::File(file) => file.flush()
+        }
     }
 
     fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
-        self.inner.write_all(buf)
+        match &mut self.inner {
+            WriterSource::Stdout(out) => out.write_all(buf),
+            WriterSource::File(file) => file.write_all(buf)
+        }
     }
 }
 
