@@ -126,7 +126,7 @@ pub async fn seek(
 {
     let PlayerExtractor {player, ..} = PlayerExtractor::from_id(session, &state, guild)?;
     let d = std::time::Duration::from_millis(millis);
-    let mut lock = player.lock().await;
+    let lock = player.lock().await;
 
     Ok(if let Some(current) = lock.queue.current() {
         let res = current.seek_async(d).await?;
