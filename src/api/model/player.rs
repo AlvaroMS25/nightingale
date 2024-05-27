@@ -1,4 +1,5 @@
 use std::num::NonZeroU64;
+use std::time::Duration;
 
 use serde::Serialize;
 
@@ -13,4 +14,9 @@ pub struct Player {
     pub volume: u8,
     pub currently_playing: Option<Track>,
     pub queue: Vec<Track>
+}
+
+#[derive(Serialize, Debug)]
+pub struct SeekJson {
+    pub d: Duration
 }

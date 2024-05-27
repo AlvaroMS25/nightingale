@@ -14,7 +14,7 @@ use crate::api::extractors::player::PlayerExtractor;
 use crate::api::extractors::session::SessionWithGuildExtractor;
 use crate::api::model::connection::DeserializableConnectionInfo;
 use crate::api::model::play::PlayOptions;
-use crate::api::model::player::Player;
+use crate::api::model::player::{Player, SeekJson};
 use crate::api::model::track::Track;
 use crate::api::state::State;
 use crate::playback::metadata::TrackMetadata;
@@ -117,4 +117,26 @@ pub async fn volume(
         .status(StatusCode::OK)
         .body(Body::empty())
         .unwrap())
+}
+
+pub async fn seek(
+    AxumState(state): AxumState<State>,
+    Path((session, guild, millis)): Path<(Uuid, NonZeroU64, u64)>
+) -> Result<Response, IntoResponseError>
+{
+    let PlayerExtractor {player, ..} = PlayerExtractor::from_id(session, &state, guild)?;
+    let d = std::time::Duration::from_millis(millis);
+    let mut lock = player.lock().await;
+
+    Ok(if let Some(current) = lock.queue.current() {
+        let res = current.seek_async(d).await?;
+        Json(SeekJson {
+            d: res
+        }).into_response()
+    } else {
+        Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body(Body::empty())
+            .unwrap()
+    })
 }

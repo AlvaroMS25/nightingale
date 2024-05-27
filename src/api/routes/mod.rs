@@ -26,6 +26,7 @@ pub fn get_router() -> Router<State> {
                 .route("/pause", patch(player::pause))
                 .route("/resume", patch(player::resume))
                 .route("/set_volume/:volume", patch(player::volume))
+                .route("/seek/:millis", patch(player::seek))
                 .nest("/queue", Router::new()
                     .route("/skip", patch(queue::skip))
                     .route("/clear", delete(queue::clear))
