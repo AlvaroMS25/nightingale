@@ -1,6 +1,6 @@
 use std::num::NonZeroU64;
 use songbird::ConnectionInfo;
-use crate::api::model::nz::NzU64;
+use crate::api::serde::nz::NzU64;
 
 /// Possible `update_state` payloads.
 #[non_exhaustive]
