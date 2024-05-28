@@ -29,7 +29,7 @@ pub async fn info(
     session: Option<SessionExtractor>
 ) -> Result<impl IntoResponse, impl IntoResponse>{
 
-    // we know we will await the task we'll spawn next so it is not necessary to increase the
+    // we know we will await the task we'll spawn next, so it is not necessary to increase the
     // arc refcount just to decrease it in a moment, so make a shared ptr out of the state,
     // and we won't deallocate the data later.
     let ptr = state.as_ptr();
