@@ -15,6 +15,7 @@ mod ptr;
 mod ticket;
 mod mutex;
 mod trace;
+mod system;
 
 const NIGHTINGALE: &str = r#"
  _   _ _       _     _   _                   _

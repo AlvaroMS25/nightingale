@@ -13,8 +13,14 @@ impl<T> SharedPtr<T> {
     pub fn new(item: T) -> Self {
         let inner = Box::into_raw(Box::new(item));
 
+        unsafe {
+            Self::from_ptr_unchecked(inner)
+        }
+    }
+
+    pub unsafe fn from_ptr_unchecked(ptr: *mut T) -> Self {
         Self {
-            inner: unsafe { NonNull::new_unchecked(inner) }
+            inner: unsafe { NonNull::new_unchecked(ptr) }
         }
     }
 }

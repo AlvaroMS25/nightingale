@@ -1,11 +1,12 @@
 use std::ops::Deref;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use dashmap::DashMap;
-use sysinfo::{Pid, System};
+use sysinfo::Pid;
 use uuid::Uuid;
 use crate::api::session::Session;
 use crate::ptr::SharedPtr;
 use crate::source::Sources;
+use crate::system::System;
 
 /// The state shared throughout requests.
 #[derive(Clone)]
@@ -23,6 +24,18 @@ impl State {
     pub fn new() -> Self {
         Self(Arc::new(Inner::new()))
     }
+
+    /// Returns a pointer to the underlying arc data without increasing nor decreasing the refcount.
+    ///
+    /// SAFETY: The caller must ensure the data is valid when they want to read from it,
+    /// and must **NOT** under any circumstances, call `drop_data` on the pointer returned by this
+    /// function, since that would mean the whole State instance would be deallocated.
+    pub fn as_ptr(&self) -> SharedPtr<Inner> {
+        unsafe {
+            // we know the pointer is not null
+            SharedPtr::from_ptr_unchecked(Arc::as_ptr(&self.0) as *mut _)
+        }
+    }
 }
 
 pub struct Inner {
@@ -31,9 +44,7 @@ pub struct Inner {
     /// Running session instances.
     pub instances: DashMap<Uuid, Arc<Session>>,
     /// Information about the system the server is running on.
-    pub system: Mutex<System>,
-    /// The Pid of the server.
-    pub pid: Pid,
+    pub system: System,
     /// Sources supported by nightingale.
     pub sources: SharedPtr<Sources>
 }
@@ -44,8 +55,7 @@ impl Inner {
         Self {
             http: http.clone(),
             instances: Default::default(),
-            system: Mutex::new(System::new_all()),
-            pid: Pid::from_u32(std::process::id()),
+            system: System::new(Pid::from_u32(std::process::id())),
             sources: SharedPtr::new(Sources::new(http))
         }
     }

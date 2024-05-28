@@ -28,42 +28,15 @@ pub async fn info(
     AxumState(state): AxumState<State>,
     session: Option<SessionExtractor>
 ) -> Result<impl IntoResponse, impl IntoResponse>{
-    let state_clone = state.clone();
+
+    // we know we will await the task we'll spawn next so it is not necessary to increase the
+    // arc refcount just to decrease it in a moment, so make a shared ptr out of the state,
+    // and we won't deallocate the data later.
+    let ptr = state.as_ptr();
+
     let handle = tokio::task::spawn_blocking(move || {
-        let mut lock = state_clone.system.lock().unwrap_or_else(|l| l.into_inner());
-
-        lock.refresh_pids_specifics(&[state_clone.pid], ProcessRefreshKind::new()
-            .with_cpu()
-            .with_memory()
-        );
-        lock.refresh_cpu();
-        lock.refresh_memory();
-
-        let process = lock.process(state_clone.pid).unwrap();
-
-        let cpu = CpuInfo {
-            total_usage: lock.global_cpu_info().cpu_usage(),
-            process_usage: process.cpu_usage(),
-            cores: lock.cpus().iter()
-                .map(|cpu| {
-                    CoreInfo {
-                        total_usage: cpu.cpu_usage(),
-                        frequency: cpu.frequency()
-                    }
-                })
-                .collect()
-        };
-
-        let mem = MemoryInfo {
-            memory: process.memory(),
-            virtual_memory: process.virtual_memory()
-        };
-
-        SystemInfo {
-            cpu,
-            memory: mem
-        }
-
+        ptr.system.update();
+        ptr.system.get()
     }).await;
 
     let Ok(info) = handle else {
