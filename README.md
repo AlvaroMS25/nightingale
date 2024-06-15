@@ -18,7 +18,7 @@ needs better.
 
 ## Roadmap
 - [x] Allow forcing tracks to play at arrival
-- [ ] Playback seeking route
+- [x] Playback seeking route
 - [x] Playback skip route
 - [x] Player information route
 - [x] Clear queue route
