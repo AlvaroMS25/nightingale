@@ -59,6 +59,12 @@ impl System {
         }
     }
 
+    pub fn update_get(&self) -> SystemInfo {
+        let mut write = self.inner.write();
+        write.update();
+        write.get()
+    }
+
     pub fn update(&self) {
         self.inner.write().update();
     }

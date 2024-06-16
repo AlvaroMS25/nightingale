@@ -10,5 +10,6 @@ pub struct Ready {
     /// Whether if the connection has been resumed.
     pub resumed: bool,
     /// Players of the session, only sent if the session is being resumed.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub players: Option<Vec<Player>>
 }

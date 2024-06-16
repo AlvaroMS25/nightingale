@@ -35,8 +35,7 @@ pub async fn info(
     let ptr = state.as_ptr();
 
     let handle = tokio::task::spawn_blocking(move || {
-        ptr.system.update();
-        ptr.system.get()
+        ptr.system.update_get()
     }).await;
 
     let Ok(info) = handle else {
