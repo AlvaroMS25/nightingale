@@ -7,7 +7,8 @@ use tracing::Level;
 pub struct Config {
     pub server: Server,
     #[serde(default)]
-    pub logging: LoggingOptions
+    pub logging: LoggingOptions,
+    pub metrics: MetricsOptions
 }
 
 #[derive(Deserialize, Debug)]
@@ -85,4 +86,9 @@ pub enum LoggingOutput {
     #[default]
     StdOut,
     File
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MetricsOptions {
+    pub retain_minutes: u16
 }

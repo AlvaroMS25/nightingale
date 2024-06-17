@@ -26,7 +26,7 @@ const APPLICATION_JSON: &str = "application/json";
 pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
     info!("Creating HTTP server");
 
-    let state = State::new();
+    let state = State::new(&config);
 
     let mut router = Router::new()
         .route("/ws", get(websocket::connect))

@@ -4,6 +4,8 @@ use dashmap::DashMap;
 use sysinfo::Pid;
 use uuid::Uuid;
 use crate::api::session::Session;
+use crate::config::Config;
+use crate::metrics::MetricsTracker;
 use crate::ptr::SharedPtr;
 use crate::source::Sources;
 use crate::system::System;
@@ -21,8 +23,8 @@ impl Deref for State {
 }
 
 impl State {
-    pub fn new() -> Self {
-        Self(Arc::new(Inner::new()))
+    pub fn new(config: &Config) -> Self {
+        Self(Arc::new(Inner::new(config)))
     }
 
     /// Returns a pointer to the underlying arc data without increasing nor decreasing the refcount.
@@ -46,17 +48,19 @@ pub struct Inner {
     /// Information about the system the server is running on.
     pub system: System,
     /// Sources supported by nightingale.
-    pub sources: SharedPtr<Sources>
+    pub sources: SharedPtr<Sources>,
+    pub metrics: MetricsTracker
 }
 
 impl Inner {
-    fn new() -> Self {
+    fn new(config: &Config) -> Self {
         let http = reqwest::Client::new();
         Self {
             http: http.clone(),
             instances: Default::default(),
             system: System::new(Pid::from_u32(std::process::id())),
-            sources: SharedPtr::new(Sources::new(http))
+            sources: SharedPtr::new(Sources::new(http)),
+            metrics: MetricsTracker::new(&config.metrics)
         }
     }
 
