@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use axum::Router;
 use axum::routing::get;
 use axum_server::tls_rustls::RustlsConfig;
+use tower_http::trace::TraceLayer;
 use tracing::info;
 use layers::auth::RequireAuth;
 use crate::api::layers::ip::IpFilter;
@@ -32,8 +33,13 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
         .route("/ws", get(websocket::connect))
         .route("/ws/resume/:session", get(websocket::resume))
         .nest("/api/v1", routes::get_router())
-        .layer(RequireAuth(config.server.password.clone()))
         .with_state(state);
+
+    if config.logging.enable {
+        router = router.layer(TraceLayer::new_for_http());
+    }
+
+    router = router.layer(RequireAuth(config.server.password.clone()));
 
     if let Some(filter) = config.server.filter_ips {
         router = router.layer(IpFilter(filter));
