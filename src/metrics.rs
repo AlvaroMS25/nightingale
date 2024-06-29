@@ -82,7 +82,7 @@ impl MetricsTracker {
     }
 
     fn os_info() -> Vec<(String, String)> {
-        let sys = System::new();
+        let sys = System::new_all();
 
         let cpu = sys.global_cpu_info();
         let os_name = String::from(std::env::consts::OS);
