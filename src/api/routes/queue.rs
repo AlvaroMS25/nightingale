@@ -13,13 +13,9 @@ pub async fn skip(PlayerExtractor {player, ..} : PlayerExtractor) -> Result<Resp
         .queue
         .skip()
         .transpose()?
-        .async_map(|track| async move {
-            let read = track.typemap()
-                .read().await;
-
-            Json(read.get::<TrackMetadata>().unwrap() // can't fail
-                .track()).into_response()
-        }).await
+        .map(|track| {
+            Json(track.data::<TrackMetadata>().track()).into_response()
+        })
         .unwrap_or(().into_response()))
 }
 

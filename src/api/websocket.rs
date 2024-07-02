@@ -178,7 +178,7 @@ impl WebSocketHandler<'_> {
             let mut players = Vec::with_capacity(self.session.playback.players.len());
 
             for player in self.session.playback.players.iter() {
-                players.push(player.lock().await.as_json().await)
+                players.push(player.lock().await.as_json())
             }
 
             Some(players)

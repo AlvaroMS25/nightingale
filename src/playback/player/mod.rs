@@ -3,6 +3,7 @@ pub mod queue;
 
 use std::collections::VecDeque;
 use std::fmt;
+use std::sync::Arc;
 use songbird::{Config, ConnectionInfo, Driver};
 use songbird::error::ConnectionError;
 use songbird::id::{ChannelId, GuildId};
@@ -88,9 +89,8 @@ impl Player {
     /// Submits the provided input to the call driver, getting a [`TrackHandle`] and
     /// inserting the track data.
     async fn get_handle<T: Into<Input>>(&mut self, item: T, data: TrackMetadata) -> TrackHandle {
-        let track = <Input as Into<SongbirdTrack>>::into(item.into()).volume(self.volume);
+        let track = SongbirdTrack::new_with_data(item.into(), Arc::new(data)).volume(self.volume);
         let handle = self.driver.play(track.pause());
-        handle.typemap().write().await.insert::<TrackMetadata>(data);
 
         handle
     }
@@ -225,13 +225,9 @@ impl Player {
         self.queue.load_next();
     }
 
-    pub async fn as_json(&self) -> PlayerModel {
-        async fn track(handle: &TrackHandle) -> TrackModel {
-            let read = handle.typemap().read().await;
-
-            read.get::<TrackMetadata>()
-                .map(|t| t.track())
-                .unwrap()
+    pub fn as_json(&self) -> PlayerModel {
+        fn track(handle: &TrackHandle) -> TrackModel {
+            handle.data::<TrackMetadata>().track()
         }
 
         PlayerModel {
@@ -239,16 +235,16 @@ impl Player {
             channel_id: self.channel_id.map(|c| c.0),
             paused: self.paused,
             volume: (self.volume * 100.0) as _,
-            currently_playing: self.queue.current().async_map(track).await,
+            currently_playing: self.queue.current().map(track),
             queue: {
                 let mut v = Vec::new();
 
-                if let Some(next) = self.queue.next().async_map(track).await {
+                if let Some(next) = self.queue.next().map(track) {
                     v.push(next);
                 }
 
                 v.extend(self.queue.rest.iter()
-                    .async_map::<_, _, _, Vec<_>>(|t| track(&t.handle)).await);
+                    .map(|t| track(&t.handle)));
 
                 v
             }

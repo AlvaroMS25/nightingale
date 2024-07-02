@@ -21,7 +21,7 @@ use crate::playback::metadata::TrackMetadata;
 
 /// Retrieves information about the given player.
 pub async fn info(PlayerExtractor {player, ..}: PlayerExtractor) -> Json<Player> {
-    Json(player.lock().await.as_json().await)
+    Json(player.lock().await.as_json())
 }
 
 /// Tries to connect to the provided channel, this route returns a response immediately,

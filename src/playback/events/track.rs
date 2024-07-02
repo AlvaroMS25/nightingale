@@ -30,8 +30,7 @@ impl EventHandler for TrackEvents {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         let EventContext::Track([(state, handle), ..]) = ctx else { return None; };
 
-        let map = handle.typemap().read().await;
-        let metadata = map.get::<TrackMetadata>().unwrap(); // We insert it, so this cannot panic
+        let metadata = handle.data::<TrackMetadata>();
 
         let event = match &state.playing {
             PlayMode::Play => OutgoingEvent::TrackStart(metadata.track()),
@@ -54,8 +53,6 @@ impl EventHandler for TrackEvents {
             guild_id: metadata.guild,
             event
         };
-
-        drop(map);
 
         let _ = self.sender.send(event);
 

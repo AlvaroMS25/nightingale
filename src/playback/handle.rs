@@ -39,9 +39,7 @@ impl HandleWithSource {
     }
 
     pub async fn full_source(&self) -> PlaySource {
-        let read = self.handle.typemap().read().await;
-
-        let track = read.get::<TrackMetadata>().unwrap().track();
+        let track = self.handle.data::<TrackMetadata>().track();
 
         match &self.source {
             MinimalSource::Link {force_ytdlp, link} => PlaySource::Link {
