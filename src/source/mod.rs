@@ -3,6 +3,7 @@ use reqwest::Client;
 use songbird::input::{AuxMetadata, Input};
 use crate::api::error::IntoResponseError;
 use crate::api::model::play::PlaySource;
+use crate::source::deezer::Deezer;
 use crate::source::http::HttpSource;
 use crate::source::youtube::Youtube;
 use crate::source::ytdlp::Ytdlp;
@@ -10,9 +11,11 @@ use crate::source::ytdlp::Ytdlp;
 pub mod youtube;
 pub mod ytdlp;
 pub mod http;
+pub mod deezer;
 
 pub struct Sources {
     pub youtube: Youtube,
+    pub deezer: Deezer,
     pub yt_dlp: Ytdlp,
     pub http: HttpSource
 }
@@ -21,6 +24,7 @@ impl Sources {
     pub fn new(http: Client) -> Self {
         Self {
             youtube: Youtube::new(http.clone()),
+            deezer: Deezer::new(http.clone()),
             yt_dlp: Ytdlp::new(http.clone()),
             http: HttpSource::new(http)
         }
@@ -29,10 +33,14 @@ impl Sources {
     pub fn source_for(&self, source: &PlaySource) -> &dyn SourcePlayer {
         match source {
             PlaySource::Link { force_ytdlp, link } => {
-                if *force_ytdlp || !self.youtube.can_play(link.as_str()) {
+                if *force_ytdlp {
                     &self.yt_dlp
-                } else {
+                } else if self.youtube.can_play(link.as_str()) {
                     &self.youtube
+                } else if self.deezer.can_play(link.as_str()) {
+                    &self.deezer
+                } else {
+                    &self.yt_dlp
                 }
             },
             PlaySource::Http {..} => &self.http,
