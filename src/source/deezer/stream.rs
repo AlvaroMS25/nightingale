@@ -29,7 +29,6 @@ impl Compose for DeezerHttpStream {
                 out_buf: Vec::with_capacity(2048),
                 decryptor: Decryptor::new_from_slices(self.key.as_bytes(), &SECRET_IV).unwrap(),
                 current_chunk: 0,
-                total_size: 0
             }) as Box<dyn MediaSource>,
             hint: inner.hint
         })
@@ -49,7 +48,6 @@ pub struct DeezerMediaSource {
     read_buf: [u8; 2048],
     out_buf: Vec<u8>,
     current_chunk: usize,
-    total_size: usize,
     decryptor: Decryptor<Blowfish>
 }
 
@@ -77,7 +75,6 @@ impl Read for DeezerMediaSource {
         }
 
         self.current_chunk += 1;
-        self.read_buf.fill(0);
 
         let end = std::cmp::min(buf.len(), self.out_buf.len());
         let drain = self.out_buf.drain(0..end);
