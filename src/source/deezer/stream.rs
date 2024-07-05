@@ -93,7 +93,7 @@ impl Seek for DeezerMediaSource {
 
 impl MediaSource for DeezerMediaSource {
     fn is_seekable(&self) -> bool {
-        true
+        self.inner.is_seekable()
     }
 
     fn byte_len(&self) -> Option<u64> {
