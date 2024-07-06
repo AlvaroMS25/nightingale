@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use futures_util::FutureExt;
 use songbird::{Event, EventContext, EventHandler, TrackEvent};
 use songbird::events::context_data::{ConnectData, DisconnectData};
 use songbird::tracks::{TrackHandle, TrackState};
@@ -14,8 +15,11 @@ pub struct PlayerHandler {
 }
 
 impl PlayerHandler {
-    pub async fn register(player: Arc<TicketedMutex<Player>>) {
-        let mut lock = player.lock().await;
+    pub fn register(player: Arc<TicketedMutex<Player>>) {
+        let mut lock = unsafe {
+            // This can never be UB since we just created the mutex.
+            player.lock().now_or_never().unwrap_unchecked()
+        };
 
         lock.driver.add_global_event(TrackEvent::End.into(), Self {
             player: Arc::clone(&player)

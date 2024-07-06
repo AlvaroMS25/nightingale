@@ -74,7 +74,7 @@ impl Playback {
             info!("Created player for guild {guild}");
 
             let player = Arc::new(TicketedMutex::new(player));
-            PlayerHandler::register(Arc::clone(&player)).await;
+            PlayerHandler::register(Arc::clone(&player));
 
             self.players.insert(guild, Arc::clone(&player));
             player
