@@ -11,11 +11,6 @@ mod periodic;
 mod track;
 mod driver;
 
-#[async_trait::async_trait]
-pub trait EventsExt {
-    async fn register_events(&mut self, session: Arc<Session>);
-}
-
 fn chain_events<I, T, H>(driver: &mut Driver, events: I, handler: H)
 where
     I: IntoIterator<Item = T>,
@@ -30,9 +25,8 @@ where
     }
 }
 
-#[async_trait::async_trait]
-impl EventsExt for Player {
-    async fn register_events(&mut self, session: Arc<Session>) {
+impl Player {
+    pub async fn register_events(&mut self, session: Arc<Session>) {
         self.driver.add_global_event(
             Event::Periodic(Duration::from_secs(5), None),
             PeriodicEvents::new(Arc::clone(&session))

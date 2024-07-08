@@ -6,7 +6,6 @@ use songbird::driver::DisposalThread;
 use songbird::id::{GuildId, UserId};
 use songbird::error::ConnectionError;
 use tracing::info;
-use events::EventsExt;
 use crate::api::session::Session;
 use crate::channel::{Receiver, Sender};
 use crate::mutex::TicketedMutex;
