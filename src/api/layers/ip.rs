@@ -1,12 +1,19 @@
+use std::future::Future;
+use std::marker::PhantomData;
 use std::net::SocketAddr;
+use std::pin::Pin;
 use std::task::{Context, Poll};
+
 use axum::body::Body;
-use axum::extract::{ConnectInfo, Request};
+use axum::extract::{ConnectInfo, FromRequestParts, Request};
 use axum::http::StatusCode;
 use axum::RequestExt;
-use axum::response::{IntoResponse, Response};
-use futures_util::future::BoxFuture;
-use tower::{Layer, Service, ServiceExt};
+use axum::response::Response;
+use futures::ready;
+use futures_util::FutureExt;
+use tower::{Layer, Service};
+
+use crate::api::layers::splitable::SplittableRequest;
 use crate::config::FilterIps;
 
 /// Layer that filters connections using the IPs provided in the configuration file,
@@ -32,44 +39,74 @@ pub struct IpFilterLayer<S> {
     inner: S
 }
 
+pub struct IpFilterFuture<F, E> {
+    allowed: bool,
+    fut: Option<F>,
+    marker: PhantomData<fn() -> Result<Response, E>>
+}
+
+impl<F, E> Future for IpFilterFuture<F, E>
+where
+    F: Future<Output = Result<Response, E>> + Send + Unpin + 'static,
+    E: 'static
+{
+    type Output = F::Output;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if !self.allowed {
+            Poll::Ready(Ok(Response::builder()
+                .status(StatusCode::FORBIDDEN)
+                .body(Body::empty())
+                .unwrap()))
+        } else {
+            //Pin::new(&mut self.fut.as_mut().unwrap()).poll(cx)
+            let Some(fut) = self.fut.as_mut() else {
+                panic!("Future polled after completion");
+            };
+
+            let res = ready!(Pin::new(fut).poll(cx));
+            self.fut.take();
+
+            Poll::Ready(res)
+        }
+    }
+}
+
 impl<S> Service<Request> for IpFilterLayer<S>
 where
     S: Service<Request, Response = Response> + Send + Clone + 'static,
-    S::Future: Send + 'static
+    S::Future: Send + Unpin + 'static
 {
     type Response = S::Response;
     type Error = S::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = IpFilterFuture<S::Future, S::Error>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, mut req: Request) -> Self::Future {
-        let mut inner = self.inner.clone().boxed_clone();
-        let filter = self.filter;
+    fn call(&mut self, req: Request) -> Self::Future {
+        let mut splitable = SplittableRequest::new(req);
+        let mut parts = splitable.parts();
 
-        Box::pin(async move {
-            let info = match req.extract_parts::<ConnectInfo<SocketAddr>>().await {
-                Ok(info) => info,
-                Err(e) => {
-                    return Ok(e.into_response());
-                }
-            };
+        let info = ConnectInfo::<SocketAddr>::from_request_parts(&mut parts, &())
+            // ConnectInfo uses Extension as its extractor, and Extension itself does not
+            // await anything, so we are sure the future completes at first poll.
+            .now_or_never().unwrap()
+            // We tell axum server to provide us with the connection information, so this cannot fail.
+            .unwrap();
 
-            let allowed = match info.0 {
-                SocketAddr::V4(v4) => filter.v4.map(|n| n.contains(v4.ip())),
-                SocketAddr::V6(v6) => filter.v6.map(|n| n.contains(v6.ip()))
-            }.unwrap_or(false);
+        let req = splitable.recover(parts);
 
-            if !allowed {
-                return Ok(Response::builder()
-                    .status(StatusCode::FORBIDDEN)
-                    .body(Body::empty())
-                    .unwrap())
-            }
+        let allowed = match info.0 {
+            SocketAddr::V4(v4) => self.filter.v4.map(|n| n.contains(v4.ip())),
+            SocketAddr::V6(v6) => self.filter.v6.map(|n| n.contains(v6.ip()))
+        }.unwrap_or(false);
 
-            inner.call(req).await.map_err(From::from)
-        })
+        IpFilterFuture {
+            allowed,
+            fut: if allowed { Some(self.inner.call(req)) } else { None },
+            marker: PhantomData
+        }
     }
 }

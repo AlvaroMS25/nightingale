@@ -1,4 +1,10 @@
+use std::future::Future;
+use std::marker::PhantomData;
+use std::pin::Pin;
+use std::process::Output;
+use std::task::{Context, Poll};
 use axum::{body::Body, extract::Request, http::{StatusCode, header}, response::Response};
+use futures::ready;
 use futures_util::future::BoxFuture;
 use tower::{Layer, Service};
 use tracing::warn;
@@ -26,16 +32,53 @@ pub struct RequireAuthService<S> {
     inner: S
 }
 
+pub struct RequireAuthFuture<F, E> {
+    correct: bool,
+    fut: Option<F>,
+    marker: PhantomData<fn() -> Result<Response, E>>
+}
+
+impl<F, E> Future for RequireAuthFuture<F, E>
+where
+    F: Future<Output = Result<Response, E>> + Send + Unpin + 'static,
+    E: 'static
+{
+    type Output = F::Output;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if !self.correct {
+            warn!("Incorrect or no authorization provided");
+            return Poll::Ready(Ok(Response::builder()
+                .status(StatusCode::UNAUTHORIZED)
+                .header(
+                    header::WWW_AUTHENTICATE,
+                    r#"Basic realm="Nightingale server", charset="UTF-8""#
+                )
+                .body(Body::empty())
+                .unwrap()))
+        }
+
+        let Some(fut) = self.fut.as_mut() else {
+            panic!("Future polled after completion");
+        };
+
+        let res = ready!(Pin::new(fut).poll(cx));
+        self.fut.take();
+
+        Poll::Ready(res)
+    }
+}
+
 impl<S> Service<Request> for RequireAuthService<S> 
 where
     S: Service<Request, Response = Response> + Send + 'static,
-    S::Future: Send + 'static
+    S::Future: Send + Unpin + 'static
 {
     type Response = S::Response;
     type Error = S::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = RequireAuthFuture<S::Future, S::Error>;
 
-    fn poll_ready(&mut self, cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)
     }
 
@@ -44,24 +87,15 @@ where
             .get(header::AUTHORIZATION)
             .and_then(|header| header.to_str().ok());
 
-        match auth {
-            Some(a) if a == self.password => {},
-            _ => return Box::pin(async {
-                warn!("Incorrect or no authorization provided");
-                Ok(Response::builder()
-                .status(StatusCode::UNAUTHORIZED)
-                .header(
-                    header::WWW_AUTHENTICATE,
-                    r#"Basic realm="Nightingale server", charset="UTF-8""#
-                )
-                .body(Body::empty())
-                .unwrap())
-            })
+        let correct = match auth {
+            Some(a) if a == self.password => true,
+            _ => false
         };
 
-        let fut = self.inner.call(req);
-        Box::pin(async move {
-            fut.await.map_err(From::from)
-        })
+        RequireAuthFuture {
+            correct,
+            fut: if correct { Some(self.inner.call(req)) } else { None },
+            marker: PhantomData,
+        }
     }
 }
