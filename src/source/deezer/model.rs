@@ -51,6 +51,7 @@ pub struct JwtResponse {
 pub struct SearchResponse {
     pub data: Vec<ItemData>,
     pub total: usize,
+    #[serde(default)]
     pub next: Option<String>
 }
 
@@ -102,18 +103,20 @@ pub struct ItemData {
     pub duration: u64,
     pub title: String,
     pub link: String,
+    #[serde(default)]
     pub album: Option<Album>,
+    #[serde(default)]
     pub isrc: Option<String>
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 pub struct Artist {
     pub name: String
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Album {
-    pub cover_xl: String,
+    pub cover: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -141,7 +144,7 @@ impl DeezerTrack {
             length: item.duration * 1000,
             title: item.title,
             uri: item.link,
-            artwork_url: item.album.map(|a| a.cover_xl),
+            artwork_url: item.album.map(|a| a.cover),
             isrc: item.isrc
         }
     }
