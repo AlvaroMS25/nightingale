@@ -86,12 +86,12 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
         };
 
         if !enable_resume {
-            debug!("Session[{id}] is not allowed to resume, cleaning up");
+            info!("Session[{id}] is not allowed to resume, cleaning up");
             if let Some((_, s)) = state.instances.remove(&id) {
                 s.destroy().await;
             }
         } else {
-            debug!("Session[{id}] is allowed to resume, waiting {timeout:?} before cleaning up");
+            info!("Session[{id}] is allowed to resume, waiting {timeout:?} before cleaning up");
             *session.playback.receiver.lock() = Some(receiver);
             let abort = Abort::new();
             let future = abort.as_future();
@@ -99,10 +99,10 @@ pub async fn initialize_websocket(state: State, websocket: WebSocket, id: Uuid, 
 
             match tokio::time::timeout(timeout, future).await {
                 Ok(_) => {
-                    debug!("Session[{id}] was resumed");
+                    info!("Session[{id}] was resumed");
                 },
                 Err(_) => {
-                    debug!("Session[{id}] was not resumed, cleaning up");
+                    info!("Session[{id}] was not resumed, cleaning up");
                     if let Some((_, s)) = state.instances.remove(&id) {
                         s.destroy().await;
                     }
