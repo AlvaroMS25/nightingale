@@ -1,12 +1,15 @@
+use std::mem::MaybeUninit;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, AtomicU64};
 use std::time::Duration;
 use axum::body::Body;
 use axum::http::header::CONTENT_TYPE;
 use axum::response::Response;
+use parking_lot::Mutex;
 use prometheus_client::metrics::gauge::Gauge as G;
 use prometheus_client::metrics::info::Info;
 use prometheus_client::registry::Registry;
+use tokio::task::JoinHandle;
 //use prometheus::{Encoder, Gauge, IntGauge, Registry};
 use crate::api::error::IntoResponseError;
 use crate::config::MetricsOptions;
@@ -16,11 +19,26 @@ use crate::system::System;
 type IntGauge = G<u32, AtomicU32>;
 type FloatGauge = G<f64, AtomicU64>;
 
+static mut METRICS: MaybeUninit<MetricsTracker> = MaybeUninit::uninit();
+
+pub fn metrics() -> &'static MetricsTracker {
+    unsafe {
+        METRICS.assume_init_ref()
+    }
+}
+
+pub unsafe fn drop_metrics() {
+    if let Some(t) = metrics().task.lock().take() {
+        t.abort();
+    }
+
+    METRICS.assume_init_drop();
+}
+
 /// Metrics collector used in the prometheus endpoint.
-#[derive(Clone)]
 pub struct MetricsTracker {
-    system: SharedPtr<System>,
-    options: MetricsOptions,
+    pub system: SharedPtr<System>,
+    pub options: MetricsOptions,
     pub registry: Arc<Registry>,
     pub sessions: IntGauge,
     pub playing_players: IntGauge,
@@ -29,11 +47,12 @@ pub struct MetricsTracker {
     pub total_cpu_usage: FloatGauge,
     pub ram_usage: FloatGauge,
     pub virtual_ram_usage: FloatGauge,
+    pub task: Mutex<Option<JoinHandle<()>>>
 }
 
 impl MetricsTracker {
     #[allow(dead_code)]
-    pub fn new(system: SharedPtr<System>, opts: MetricsOptions) -> Self {
+    pub fn init(system: SharedPtr<System>, opts: MetricsOptions) {
         let mut registry = Registry::default();
 
         let sessions = IntGauge::default();
@@ -63,9 +82,14 @@ impl MetricsTracker {
             total_cpu_usage,
             ram_usage,
             virtual_ram_usage,
+            task: Default::default(),
         };
-        this.clone().start_task();
-        this
+
+        unsafe {
+            METRICS.write(this);
+        }
+
+        metrics().start_task();
     }
 
     pub fn build_response(&self) -> Result<Response, IntoResponseError> {
@@ -78,8 +102,8 @@ impl MetricsTracker {
             .map_err(From::from)
     }
 
-    fn start_task(self) {
-        tokio::spawn(async move {
+    fn start_task(&'static self) {
+        let handle = tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(self.options.update_seconds)).await;
 
@@ -91,5 +115,7 @@ impl MetricsTracker {
                 self.virtual_ram_usage.set((info.memory.virtual_memory / 1024 / 1024) as _);
             }
         });
+
+        *self.task.lock() = Some(handle);
     }
 }

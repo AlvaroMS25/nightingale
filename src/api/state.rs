@@ -49,19 +49,20 @@ pub struct Inner {
     pub system: SharedPtr<System>,
     /// Sources supported by nightingale.
     pub sources: SharedPtr<Sources>,
-    pub metrics: MetricsTracker
 }
 
 impl Inner {
     fn new(config: &Config) -> Self {
         let http = reqwest::Client::new();
         let sys = SharedPtr::new(System::new(Pid::from_u32(std::process::id())));
+
+        MetricsTracker::init(sys, config.metrics.clone());
+
         Self {
             http: http.clone(),
             instances: Default::default(),
             system: sys,
             sources: SharedPtr::new(Sources::new(http)),
-            metrics: MetricsTracker::new(sys, config.metrics.clone())
         }
     }
 

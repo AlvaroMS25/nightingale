@@ -9,6 +9,7 @@ use layers::auth::RequireAuth;
 use crate::api::layers::ip::IpFilter;
 use crate::api::state::State;
 use crate::config::Config;
+use crate::metrics::drop_metrics;
 
 mod state;
 pub mod model;
@@ -53,7 +54,7 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
     );
 
     let addr = format!("{}:{}", config.server.address, config.server.port).parse().unwrap();
-    if let Some(ssl_config) = config.server.ssl {
+    let ret = if let Some(ssl_config) = config.server.ssl {
         axum_server::bind_rustls(
             addr,
             RustlsConfig::from_pem_file(ssl_config.cert_path, ssl_config.key_path).await?
@@ -62,6 +63,11 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
         axum_server::Server::bind(addr)
             .serve(router.into_make_service_with_connect_info::<SocketAddr>())
             .await
+    };
+
+    unsafe {
+        drop_metrics();
     }
 
+    ret
 }
