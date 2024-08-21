@@ -88,7 +88,7 @@ pub enum LoggingOutput {
     File
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MetricsOptions {
-    pub retain_minutes: u16
+    pub update_seconds: u64
 }

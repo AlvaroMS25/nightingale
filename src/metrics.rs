@@ -1,105 +1,71 @@
-use std::sync::atomic::AtomicU32;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, AtomicU64};
+use std::time::Duration;
 use axum::body::Body;
 use axum::http::header::CONTENT_TYPE;
 use axum::response::Response;
-use prometheus_client::metrics::gauge::Gauge;
-use prometheus_client::metrics::histogram::Histogram;
+use prometheus_client::metrics::gauge::Gauge as G;
 use prometheus_client::metrics::info::Info;
 use prometheus_client::registry::Registry;
-use sysinfo::System;
+//use prometheus::{Encoder, Gauge, IntGauge, Registry};
 use crate::api::error::IntoResponseError;
 use crate::config::MetricsOptions;
+use crate::ptr::SharedPtr;
+use crate::system::System;
 
-pub type GaugeU32 = Gauge<u32, AtomicU32>;
+type IntGauge = G<u32, AtomicU32>;
+type FloatGauge = G<f64, AtomicU64>;
 
 /// Metrics collector used in the prometheus endpoint.
+#[derive(Clone)]
 pub struct MetricsTracker {
-    pub registry: Registry,
-    pub sessions: GaugeU32,
-    pub playing_players: GaugeU32,
-    pub active_players: GaugeU32,
-    pub cpu_usage: GaugeU32,
-    pub ram_usage: GaugeU32,
-    pub playing_players_histogram: Histogram,
-    pub active_players_histogram: Histogram,
-    pub cpu_usage_histogram: Histogram,
-    pub ram_usage_histogram: Histogram,
-}
-
-fn gen_buckets(minutes: u16) -> impl Iterator<Item = f64> + Clone {
-    let minutes = -(minutes as i16);
-
-    (minutes ..= 0)
-        .map(|v| v as f64)
+    system: SharedPtr<System>,
+    options: MetricsOptions,
+    pub registry: Arc<Registry>,
+    pub sessions: IntGauge,
+    pub playing_players: IntGauge,
+    pub active_players: IntGauge,
+    pub cpu_usage: FloatGauge,
+    pub total_cpu_usage: FloatGauge,
+    pub ram_usage: FloatGauge,
+    pub virtual_ram_usage: FloatGauge,
 }
 
 impl MetricsTracker {
     #[allow(dead_code)]
-    pub fn new(config: &MetricsOptions) -> Self {
-        let mut registry = Registry::with_prefix("Nightingale metrics");
-        let buckets = gen_buckets(config.retain_minutes);
+    pub fn new(system: SharedPtr<System>, opts: MetricsOptions) -> Self {
+        let mut registry = Registry::default();
 
-        let info = Info::new(Self::os_info());
+        let sessions = IntGauge::default();
+        let playing_players = IntGauge::default();
+        let active_players = IntGauge::default();
+        let cpu_usage = FloatGauge::default();
+        let total_cpu_usage = FloatGauge::default();
+        let ram_usage = FloatGauge::default();
+        let virtual_ram_usage = FloatGauge::default();
 
-        let sessions = GaugeU32::default();
-
-        let playing_players_gauge = GaugeU32::default();
-        let playing_players_histogram = Histogram::new(buckets.clone());
-
-        let active_players_gauge = GaugeU32::default();
-        let active_players_histogram = Histogram::new(buckets.clone());
-
-        let cpu_usage_gauge = GaugeU32::default();
-        let cpu_usage_histogram = Histogram::new(buckets.clone());
-
-        let ram_usage_gauge = GaugeU32::default();
-        let ram_usage_histogram = Histogram::new(buckets);
-
-        registry.register("System information", "Information about the system the server runs on", info);
         registry.register("Sessions", "Number of active sessions", sessions.clone());
-        registry.register("Playing players", "Players that are currently playing audio", playing_players_gauge.clone());
-        registry.register("Active players", "Number of active players", active_players_gauge.clone());
-        registry.register("CPU usage", "Server CPU usage", cpu_usage_gauge.clone());
-        registry.register("RAM usage", "Server RAM usage", ram_usage_gauge.clone());
+        registry.register("PlayingPlayers", "Players that are currently playing audio", playing_players.clone());
+        registry.register("ActivePlayers", "Number of active players", active_players.clone());
+        registry.register("ServerCPUUsage", "Server percentage of CPU usage", cpu_usage.clone());
+        registry.register("TotalCPUUsage", "System total percentage of CPU usage", total_cpu_usage.clone());
+        registry.register("RSSRAMUsage", "Server RAM usage in MB", ram_usage.clone());
+        registry.register("VirtualRAMUsage", "Server Virtual RAM usage in MB", virtual_ram_usage.clone());
 
-        registry.register("Playing players histogram", "Histogram of playing players", playing_players_histogram.clone());
-        registry.register("Active players histogram", "Histogram of active players", active_players_histogram.clone());
-        registry.register("CPU usage histogram", "Histogram of CPU usage", cpu_usage_histogram.clone());
-        registry.register("RAM usage histogram", "Histogram of RAM usage", ram_usage_histogram.clone());
-
-        Self {
-            registry,
+        let this = Self {
+            system,
+            options: opts,
+            registry: Arc::new(registry),
             sessions,
-            playing_players: playing_players_gauge,
-            active_players: active_players_gauge,
-            cpu_usage: cpu_usage_gauge,
-            ram_usage: ram_usage_gauge,
-            playing_players_histogram,
-            active_players_histogram,
-            cpu_usage_histogram,
-            ram_usage_histogram
-        }
-    }
-
-    fn os_info() -> Vec<(String, String)> {
-        let sys = System::new_all();
-
-        let cpu = sys.global_cpu_info();
-        let os_name = String::from(std::env::consts::OS);
-
-        let cores = if let Some(c) = sys.physical_core_count() {
-            c.to_string()
-        } else {
-            String::from("Unknown")
+            playing_players,
+            active_players,
+            cpu_usage,
+            total_cpu_usage,
+            ram_usage,
+            virtual_ram_usage,
         };
-        let mb = sys.total_memory() / 1024 / 1024;
-
-        vec![
-            (String::from("OS"), os_name),
-            (String::from("CPU"), String::from(cpu.name())),
-            (String::from("CPU Cores"), cores),
-            (String::from("RAM (MB)"), mb.to_string())
-        ]
+        this.clone().start_task();
+        this
     }
 
     pub fn build_response(&self) -> Result<Response, IntoResponseError> {
@@ -107,8 +73,23 @@ impl MetricsTracker {
         prometheus_client::encoding::text::encode(&mut buf, &self.registry)?;
 
         Response::builder()
-            .header(CONTENT_TYPE, "application/openmetrics-text; version=1.0.0; charset=utf-8")
+            .header(CONTENT_TYPE, "text/plain; version=0.0.4")
             .body(Body::from(buf))
             .map_err(From::from)
+    }
+
+    fn start_task(self) {
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(self.options.update_seconds)).await;
+
+                let info = self.system.update_get();
+
+                self.cpu_usage.set(info.cpu.process_usage as _);
+                self.total_cpu_usage.set(info.cpu.total_usage as _);
+                self.ram_usage.set((info.memory.memory / 1024 / 1024) as _);
+                self.virtual_ram_usage.set((info.memory.virtual_memory / 1024 / 1024) as _);
+            }
+        });
     }
 }
