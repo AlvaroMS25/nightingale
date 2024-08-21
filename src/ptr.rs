@@ -4,7 +4,6 @@ use std::ptr::NonNull;
 /// A wrapper around a raw pointer, this is intended to be used with items that have a known lifetime,
 /// this way we avoid having a refcount. However, this type requires manual drop while ensuring no
 /// more instances are alive.
-#[derive(Copy)]
 pub struct SharedPtr<T: ?Sized> {
     inner: NonNull<T>
 }
@@ -60,6 +59,8 @@ impl<T: ?Sized> Clone for SharedPtr<T> {
         }
     }
 }
+
+impl<T: ?Sized> Copy for SharedPtr<T> {}
 
 unsafe impl<T: Send + Sync + ?Sized> Send for SharedPtr<T> {}
 unsafe impl<T: Send + Sync + ?Sized> Sync for SharedPtr<T> {}
