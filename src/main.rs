@@ -1,5 +1,8 @@
 use std::time::Duration;
 use tracing::{error, info, Level};
+use tracing_subscriber::fmt::writer::MakeWriterExt;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use crate::config::{Config, LoggingLevel, LoggingOutput};
 use crate::trace::TracingWriter;
 
@@ -72,10 +75,23 @@ fn main() {
 
         _writer_guard = Some(g);
 
+        #[cfg(not(feature = "tokio-tracing"))]
         tracing_subscriber::fmt()
             .with_writer(nb)
             .with_max_level(<LoggingLevel as Into<Level>>::into(config.logging.level))
             .init();
+
+        #[cfg(feature = "tokio-tracing")]
+        tracing_subscriber::registry()
+            .with(console_subscriber::spawn())
+            .with(tracing_subscriber::fmt::layer()
+                .with_writer(nb)
+                //.with_max_level(<LoggingLevel as Into<Level>>::into(config.logging.level))
+            )
+            .init();
+    } else {
+        #[cfg(feature = "tokio-tracing")]
+        console_subscriber::init();
     }
 
     info!("Creating tokio runtime");
