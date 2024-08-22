@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 use songbird::tracks::{TrackHandle, TrackResult};
 use crate::api::model::play::PlaySource;
+use crate::metrics::metrics;
 use crate::playback::handle::HandleWithSource;
 
 #[derive(Default)]
@@ -128,6 +129,7 @@ impl Queue {
     pub fn enqueue(&mut self, track: HandleWithSource) -> bool {
         if self.should_play() {
             self.next = Some(track);
+            metrics().playing_players.inc();
             true
         } else if self.next.is_none() && self.rest.is_empty() {
             let _ = track.handle.make_playable();
@@ -140,6 +142,10 @@ impl Queue {
     }
 
     pub fn force_track(&mut self, track: HandleWithSource) {
+        if self.should_play() {
+            metrics().playing_players.inc();
+        }
+
         if let Some(next) = self.next.take() {
             self.rest.push_front(next);
         }
@@ -149,6 +155,10 @@ impl Queue {
     }
 
     pub fn clear(&mut self) {
+        if !self.should_play() {
+            metrics().playing_players.dec();
+        }
+
         self.current.take().map(|t| t.handle.stop());
         self.next.take().map(|t| t.handle.stop());
 

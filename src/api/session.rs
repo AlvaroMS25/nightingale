@@ -3,6 +3,7 @@ use std::time::Duration;
 use parking_lot::Mutex;
 use uuid::Uuid;
 use crate::abort::Abort;
+use crate::metrics::metrics;
 use crate::playback::Playback;
 use crate::ptr::SharedPtr;
 use crate::source::Sources;
@@ -24,6 +25,8 @@ pub struct SessionOptions {
 
 impl Session {
     pub fn new(id: Uuid, user_id: NonZeroU64, sources: SharedPtr<Sources>) -> Self {
+        metrics().sessions.inc();
+
         Self {
             id,
             playback: Playback::new(user_id, sources),
@@ -36,6 +39,7 @@ impl Session {
     }
 
     pub async fn destroy(&self) {
+        metrics().sessions.dec();
         self.playback.destroy().await;
     }
 }

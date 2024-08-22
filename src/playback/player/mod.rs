@@ -18,6 +18,7 @@ use crate::api::model::play::PlaySource;
 use crate::api::model::track::{Track as TrackModel, Track};
 use crate::channel::Sender;
 use crate::ext::{AsyncIteratorExt, AsyncOptionExt};
+use crate::metrics::metrics;
 use crate::playback::handle::HandleWithSource;
 use crate::playback::player::queue::RepeatMode;
 use crate::ptr::SharedPtr;
@@ -43,6 +44,7 @@ unsafe impl Send for Player {}
 
 impl Player {
     pub fn new(guild_id: GuildId, sources: SharedPtr<Sources>, config: Config, sender: Sender) -> Self {
+        metrics().active_players.inc();
         Self {
             guild_id,
             channel_id: None,
@@ -125,6 +127,7 @@ impl Player {
         self.queue.clear();
         self.driver.remove_all_global_events();
         self.driver.leave();
+        metrics().active_players.dec();
         Ok(())
     }
 
@@ -200,6 +203,7 @@ impl Player {
         if self.queue.should_play() {
             // if true here, we're empty of tracks.
             info!("Queue empty");
+            metrics().playing_players.dec();
             return;
         }
 
