@@ -43,6 +43,8 @@ blowfish = "0.9.1"
 phf = { version = "0.11.2", features = ["macros", "serde"] }
 urlencoding = "2.1.3"
 md5 = "0.7.0"
+tracing-loki = { version = "0.2.5", features = ["rustls", "compat-0-2-1"], default-features = false }
+base64 = "0.22.1"
 
 [dependencies.symphonia]
 version = "0.5.3"

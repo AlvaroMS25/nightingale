@@ -1,8 +1,10 @@
 use std::time::Duration;
+use base64::Engine;
 use tracing::{error, info, Level};
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::filter::LevelFilter;
 use crate::config::{Config, LoggingLevel, LoggingOutput};
 use crate::trace::TracingWriter;
 
@@ -52,6 +54,7 @@ fn main() {
 
     println!("Read nightingale.toml");
     let mut _writer_guard = None;
+    let mut loki_task = None;
 
     if config.logging.enable {
         let writer = match (config.logging.output, config.logging.file.as_ref()) {
@@ -75,10 +78,43 @@ fn main() {
 
         _writer_guard = Some(g);
 
-        tracing_subscriber::fmt()
-            .with_writer(nb)
-            .with_max_level(<LoggingLevel as Into<Level>>::into(config.logging.level))
-            .init();
+        if config.metrics.enable_loki {
+            if config.loki.is_none() {
+                eprintln!("Loki is enabled, but no `loki` config was provided");
+                return;
+            }
+
+            let opts = config.loki.as_ref().unwrap();
+
+            let loki_auth = base64::engine::general_purpose::STANDARD
+                .encode(format!("{}:{}", opts.user, opts.password));
+
+            let (layer, task) = tracing_loki::builder()
+                .label("application", "Nightingale")
+                .unwrap()
+                .http_header("Authorization", format!("Basic {loki_auth}"))
+                .unwrap()
+                .build_url(opts.url.parse().expect("invalid Loki url provided"))
+                .unwrap();
+
+
+            loki_task = Some(task);
+
+            let filter: LevelFilter = <LoggingLevel as Into<Level>>::into(config.logging.level).into();
+
+            tracing_subscriber::registry()
+                .with(filter)
+                .with(tracing_subscriber::fmt::layer()
+                    .with_writer(nb)
+                )
+                .with(layer)
+                .init();
+        } else {
+            tracing_subscriber::fmt()
+                .with_writer(nb)
+                .with_max_level(<LoggingLevel as Into<Level>>::into(config.logging.level))
+                .init();
+        }
     }
 
     info!("Creating tokio runtime");
@@ -91,6 +127,11 @@ fn main() {
     if which::which("yt-dlp").is_err() {
         error!("yt-dlp executable couldn't be found, please install it for Nightingale to work properly");
         return;
+    }
+
+    if let Some(t) = loki_task {
+        info!("Starting Loki subscriber");
+        rt.spawn(t);
     }
 
     let _ = rt.block_on(entrypoint(config));

@@ -8,7 +8,9 @@ pub struct Config {
     pub server: Server,
     #[serde(default)]
     pub logging: LoggingOptions,
-    pub metrics: MetricsOptions
+    pub metrics: MetricsOptions,
+    #[serde(default)]
+    pub loki: Option<LokiOptions>
 }
 
 #[derive(Deserialize, Debug)]
@@ -90,5 +92,13 @@ pub enum LoggingOutput {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct MetricsOptions {
-    pub update_seconds: u64
+    pub update_seconds: u64,
+    pub enable_loki: bool
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct LokiOptions {
+    pub url: String,
+    pub user: String,
+    pub password: String
 }
