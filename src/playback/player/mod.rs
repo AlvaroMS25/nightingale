@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 use std::fmt;
 use std::sync::Arc;
 use songbird::{Config, ConnectionInfo, Driver};
-use songbird::error::ConnectionError;
+use songbird::error::{ConnectionError, ControlError};
 use songbird::id::{ChannelId, GuildId};
 use songbird::input::Input;
 use songbird::tracks::{Track as SongbirdTrack, TrackHandle};
@@ -208,7 +208,15 @@ impl Player {
         }
 
         while let Err(e) = self.queue.play_next() {
-            warn!("Failed to play queued track: {e}");
+            match e {
+                ControlError::Finished => {
+                    // If we're here, the track failed to load and already has informed so before,
+                    // so just discard this error as it would be a duplicate
+                },
+                e => {
+                    warn!("Failed to play queued track: {e}");
+                }
+            }
 
             if self.queue.should_repeat_now() {
                 self.repeat_queue().await;

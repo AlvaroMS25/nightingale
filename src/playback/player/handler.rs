@@ -41,8 +41,19 @@ impl EventHandler for PlayerHandler {
 }
 
 impl PlayerHandler {
-    async fn handle_track(&self, _: &[(&TrackState, &TrackHandle)]) -> Option<Event> {
+    async fn handle_track(&self, data: &[(&TrackState, &TrackHandle)]) -> Option<Event> {
+        let &[(_, handle), ..] = data else { return None; };
+
         let mut player = self.player.lock().await;
+
+        let Some(current) = &player.queue.current else { return None; };
+        let current_id = current.handle.uuid();
+
+        if handle.uuid() != current_id {
+            // If the track that ended is not the one we were playing, that means some track had an
+            // error while loading, so don't do anything else.
+            return None;
+        }
 
         player.play_load_next().await;
         None
