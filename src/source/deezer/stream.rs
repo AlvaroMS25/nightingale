@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::io::ErrorKind::WouldBlock;
 use std::ops::{Deref, DerefMut};
@@ -7,13 +8,19 @@ use cbc::cipher::{BlockDecryptMut, KeyIvInit};
 use cbc::cipher::block_padding::NoPadding;
 use cbc::Decryptor;
 use songbird::input::core::io::MediaSource;
-use songbird::input::{AudioStream, AudioStreamError, AuxMetadata, Compose, HttpRequest};
+use songbird::input::{AsyncAdapterStream, AudioStream, AudioStreamError, AuxMetadata, Compose, HttpRequest};
 use tracing::error;
 use crate::source::deezer::SECRET_IV;
 
 pub struct DeezerHttpStream {
     pub inner: HttpRequest,
     pub key: String,
+}
+
+#[inline]
+fn into_audio_stream(b: Box<dyn MediaSource>) -> AsyncAdapterStream {
+    // SAFETY: We know the objects passed to this function are always AsyncAdapterStream
+    *unsafe { Box::from_raw(Box::into_raw(b) as *mut _) }
 }
 
 #[async_trait]
@@ -24,9 +31,10 @@ impl Compose for DeezerHttpStream {
 
     async fn create_async(&mut self) -> Result<AudioStream<Box<dyn MediaSource>>, AudioStreamError> {
         let inner = self.inner.create_async().await?;
+        let stream = into_audio_stream(inner.input);
         Ok(AudioStream {
             input: Box::new(DeezerMediaSource {
-                inner: inner.input,
+                inner: stream,
                 read_buf: Buf::new(),
                 out_buf: Vec::with_capacity(2048),
                 decryptor: Decryptor::new_from_slices(self.key.as_bytes(), &SECRET_IV).unwrap(),
@@ -46,7 +54,7 @@ impl Compose for DeezerHttpStream {
 }
 
 pub struct DeezerMediaSource {
-    inner: Box<dyn MediaSource>,
+    inner: AsyncAdapterStream,
     read_buf: Buf<2048>,
     out_buf: Vec<u8>,
     current_chunk: usize,
@@ -119,6 +127,7 @@ impl<const SIZE: usize> Buf<SIZE> {
         }
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
@@ -134,10 +143,12 @@ impl<const SIZE: usize> Buf<SIZE> {
         Ok(read_bytes)
     }
 
+    #[inline]
     pub fn is_full(&self) -> bool {
         self.len == SIZE
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.len = 0;
     }
