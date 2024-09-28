@@ -11,26 +11,31 @@ pub struct SearchQuery {
     #[serde(default)]
     query: Option<String>,
     #[serde(default)]
-    id: Option<usize>
+    id: Option<usize>,
+    #[serde(default)]
+    isrc: Option<String>
 }
 
 pub async fn search(
     AxumState(state): AxumState<State>,
-    Query(SearchQuery { query, id }): Query<SearchQuery>
+    Query(SearchQuery { query, id, isrc }): Query<SearchQuery>
 ) -> Result<Json<Vec<DeezerTrack>>, IntoResponseError>
 {
-    match (query, id) {
-        (Some(_), Some(_)) => Err(IntoResponseError::new("Both `query` and `id` provided")),
-        (None, None) => Err(IntoResponseError::new("Neither `query` nor `id` provided")),
-        (Some(q), None) => state.sources.deezer.search(&q).await
+    match (query, id, isrc) {
+        (Some(q), None, None) => state.sources.deezer.search(&q).await
             .map(Json)
             .map_err(From::from),
-        (None, Some(id)) => {
+        (None, Some(id), None) => {
             match state.sources.deezer.get_by_id(id, ItemType::Track).await? {
                 Either3::A(t) => Ok(Json(vec![t])),
                 _ => unsafe { std::hint::unreachable_unchecked() }
             }
-        }
+        },
+        (None, None, Some(isrc)) => state.sources.deezer.get_by_isrc(isrc).await
+            .map(|t| Json(vec![t]))
+            .map_err(From::from),
+        (None, None, None) => Err(IntoResponseError::new("None of `query`, `id` and `isrc` provided")),
+        _ => Err(IntoResponseError::new("`query`, `id` and `isrc` are mutually exclusive"))
     }
 }
 
