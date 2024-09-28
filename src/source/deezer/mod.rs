@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use futures_util::TryFutureExt;
 use parking_lot::lock_api::MappedRwLockReadGuard;
 use parking_lot::{RawRwLock, RwLock, RwLockReadGuard};
 use rand::RngCore;
@@ -24,6 +25,7 @@ const GET_TRACK: &str = "https://www.deezer.com/ajax/gw-light.php?method=song.ge
 const JWT_URL: &str = "https://auth.deezer.com/login/arl?jo=p&rto=c&i=c";
 const BASE_API_URL: &str = "https://api.deezer.com/2.0/";
 const SEARCH_URL: &str = "https://api.deezer.com/2.0/search?q=";
+const ISRC_URL: &str = "https://api.deezer.com/2.0/track/isrc:";
 const GET_URL: &str = "https://media.deezer.com/v1/get_url";
 
 const SECRET_KEY: &[u8; 16] = b"g4el58wc0zvf9na1";
@@ -171,6 +173,19 @@ impl Deezer {
                 .await?
                 .into_result()?)))
         }
+    }
+
+    pub async fn get_by_isrc(&self, isrc: String) -> Result<DeezerTrack, Error> {
+        self.maintenance().await?;
+
+        let res = self.http.get(format!("{ISRC_URL}{isrc}"))
+            .send()
+            .await?;
+
+        Ok(DeezerTrack::parse(res.json::<Response<ItemData>>()
+            .await?
+            .into_result()?
+        ))
     }
 
     fn url_parts(&self, url: &str) -> Option<(ItemType, usize)> {
