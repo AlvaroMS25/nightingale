@@ -16,6 +16,7 @@ use crate::source::Sources;
 
 pub mod metadata;
 pub mod events;
+pub mod filters;
 pub mod player;
 mod handle;
 
