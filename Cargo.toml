@@ -61,3 +61,7 @@ features = ["driver", "gateway", "rustls", "tungstenite"]
 git = "https://github.com/Mithronn/rusty_ytdl.git"
 default-features = false
 features = ["search", "live", "rustls-tls"]
+
+[features]
+docker = []
+default = []

@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /nightingale
 COPY . .
-RUN cargo b --release
+RUN cargo b --release --features docker
 
 FROM debian:bullseye-slim AS runtime
 WORKDIR /nightingale
@@ -27,5 +27,4 @@ COPY --from=build /nightingale/target/release/nightingale .
 
 ENTRYPOINT ["./nightingale"]
 
-# assuming we leave port to default
 EXPOSE 8081/tcp

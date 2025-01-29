@@ -49,11 +49,11 @@ pub async fn start_http(config: Config) -> Result<(), std::io::Error> {
     info!(
         "Starting HTTP{} server on {}:{}",
         if config.server.ssl.is_some() { "S" } else { "" },
-        config.server.address,
-        config.server.port
+        config.server.address(),
+        config.server.port()
     );
 
-    let addr = format!("{}:{}", config.server.address, config.server.port).parse().unwrap();
+    let addr = format!("{}:{}", config.server.address(), config.server.port()).parse().unwrap();
     let ret = if let Some(ssl_config) = config.server.ssl {
         axum_server::bind_rustls(
             addr,

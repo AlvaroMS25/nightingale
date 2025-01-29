@@ -15,13 +15,35 @@ pub struct Config {
 
 #[derive(Deserialize, Debug)]
 pub struct Server {
+    #[cfg(not(feature = "docker"))]
     pub address: String,
+    #[cfg(not(feature = "docker"))]
     pub port: u16,
     pub password: String,
-    #[serde(default)]
-    pub http2: bool,
     pub ssl: Option<SslOptions>,
     pub filter_ips: Option<FilterIps>
+}
+
+impl Server {
+    #[cfg(feature = "docker")]
+    pub fn port(&self) -> u16 {
+        8081
+    }
+
+    #[cfg(not(feature = "docker"))]
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+
+    #[cfg(feature = "docker")]
+    pub fn address(&self) -> &str {
+        "0.0.0.0"
+    }
+
+    #[cfg(not(feature = "docker"))]
+    pub fn address(&self) -> &str {
+        &self.address
+    }
 }
 
 #[derive(Deserialize, Debug, Default)]
