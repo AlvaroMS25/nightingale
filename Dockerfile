@@ -7,9 +7,6 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# armv7 has errors cloning under qemu, this makes it use git executable instead
-ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
-
 WORKDIR /nightingale
 COPY . .
 RUN cargo b --release --features docker
