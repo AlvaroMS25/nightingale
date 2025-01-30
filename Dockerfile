@@ -1,4 +1,4 @@
-FROM docker.io/rust:1-bullseye AS build
+FROM docker.io/rust:1-bookworm AS build
 
 RUN apt-get update && apt-get install -y \
     cmake \
@@ -11,7 +11,7 @@ WORKDIR /nightingale
 COPY . .
 RUN cargo b --release --features docker
 
-FROM debian:bullseye-slim AS runtime
+FROM debian:bookworm-slim AS runtime
 WORKDIR /nightingale
 
 # Install certificates, yt-dlp and dependencies
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     ca-certificates \
-    && pip3 install --no-cache-dir yt-dlp \
+    && pip3 install --break-system-packages --no-cache-dir yt-dlp \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /nightingale/target/release/nightingale .
